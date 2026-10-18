@@ -1,0 +1,40 @@
+{
+  "id": "easy_01",
+  "name": "Chú robot buồn ngủ",
+  "description": "Robot nhỏ hết pin. Lăn viên pin vào ổ cắm để đánh thức nó.",
+  "difficulty": "easy",
+  "status": "playable",
+  "rows": 4,
+  "cols": 10,
+  "grid": [
+    "####......",
+    "#######...",
+    "#########G",
+    "####......"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    2,
+    9
+  ],
+  "switches": [],
+  "bridges": [],
+  "theme": {
+    "object": "sleepy_robot",
+    "palette": "cream"
+  },
+  "solvable": true,
+  "reference_solution": [
+    "RIGHT",
+    "DOWN",
+    "DOWN",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT"
+  ]
+}

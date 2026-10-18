@@ -1,0 +1,11 @@
+import type { ToyId } from "../app/catalog";
+/** Hình đại diện cùng tỷ lệ/chi tiết với bốn ToyModel có sẵn. */
+export function componentArt(kind: ToyId) {
+  const shapes: Record<ToyId, string> = {
+    robot: '<path d="M40 11V5" stroke="#587080" stroke-width="3"/><circle cx="40" cy="5" r="3" fill="#bf543c"/><rect x="23" y="13" width="34" height="23" rx="3" fill="#e8edf1"/><rect x="27" y="18" width="26" height="13" rx="2" fill="#234d66"/><circle cx="34" cy="24" r="2" fill="#f4ce69"/><circle cx="46" cy="24" r="2" fill="#f4ce69"/><rect x="25" y="39" width="30" height="25" rx="3" fill="#2b7284"/><path d="M19 42v18M61 42v18M31 64v10M49 64v10" stroke="#8eafbf" stroke-width="8"/><rect x="34" y="44" width="12" height="12" rx="1" fill="#bb5c43"/><path d="M40 46v8M36 50h8" stroke="#fff" stroke-width="2"/>',
+    "music-box": '<rect x="13" y="39" width="54" height="29" rx="3" fill="#b55942"/><path d="M13 38 19 18h42l6 20Z" fill="#cc7050"/><path d="M19 20h42l-2 12H21Z" fill="#f0e5bd"/><path d="M12 69h56" stroke="#d8b759" stroke-width="5"/><rect x="35" y="48" width="10" height="7" rx="1" fill="#e6be57"/>',
+    train: '<rect x="11" y="47" width="59" height="12" rx="2" fill="#bd5d43"/><rect x="14" y="25" width="24" height="24" rx="2" fill="#2d7082"/><rect x="18" y="29" width="15" height="13" fill="#e7eff1"/><path d="M11 23h31" stroke="#e0b859" stroke-width="6"/><rect x="40" y="35" width="24" height="14" rx="3" fill="#7da4b9"/><path d="M57 35V21" stroke="#654d40" stroke-width="7"/><circle cx="23" cy="63" r="8" fill="#5d4b40"/><circle cx="44" cy="63" r="8" fill="#5d4b40"/><circle cx="64" cy="63" r="8" fill="#5d4b40"/><path d="M23 63h41" stroke="#d7b459" stroke-width="2"/>',
+    clock: '<rect x="20" y="16" width="40" height="51" rx="3" fill="#d4af59"/><path d="M16 14h48M17 69h46" stroke="#b85e43" stroke-width="7"/><circle cx="40" cy="37" r="16" fill="#f7f5eb"/><path d="M40 24v4M27 37h4M53 37h-4M40 50v-4M40 37l-8-5M40 37l7-10" stroke="#315d6d" stroke-width="2"/><path d="M40 55v5" stroke="#66513c" stroke-width="2"/><circle cx="40" cy="62" r="4" fill="#b9583e"/>',
+  };
+  return `<svg class="component-art" width="80" height="80" viewBox="0 0 80 80" aria-hidden="true">${shapes[kind]}</svg>`;
+}

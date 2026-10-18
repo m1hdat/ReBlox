@@ -1,0 +1,152 @@
+[
+  {
+    "name": "desktop",
+    "width": 1440,
+    "height": 900,
+    "pageWidth": 1440,
+    "viewport": 1440,
+    "overflow": [],
+    "canvas": {
+      "right": 1060,
+      "bottom": 900
+    },
+    "panel": {
+      "left": 1060,
+      "top": 76
+    },
+    "font": "\"Be Vietnam Pro\", \"Segoe UI\", system-ui, sans-serif",
+    "fontSize": "16px",
+    "fontReady": true,
+    "targets": [
+      {
+        "id": "robot",
+        "width": 171.0625,
+        "height": 239.203125
+      },
+      {
+        "id": "music-box",
+        "width": 166.09375,
+        "height": 171.734375
+      },
+      {
+        "id": "train",
+        "width": 177.578125,
+        "height": 172.125
+      },
+      {
+        "id": "clock",
+        "width": 145.71875,
+        "height": 187.6875
+      }
+    ],
+    "renderedFonts": [
+      {
+        "familyName": "Be Vietnam Pro",
+        "postScriptName": "BeVietnamPro-Regular",
+        "isCustomFont": true,
+        "glyphCount": 49
+      }
+    ],
+    "contrast": [
+      {
+        "selector": ".customer-request",
+        "ratio": 11.735044181282836
+      },
+      {
+        "selector": ".customer-name",
+        "ratio": 5.945877477846323
+      },
+      {
+        "selector": ".detail-heading",
+        "ratio": 5.945877477846323
+      },
+      {
+        "selector": ".repair-progress p",
+        "ratio": 5.945877477846323
+      },
+      {
+        "selector": ".start-repair",
+        "ratio": 7.289231762229313
+      },
+      {
+        "selector": ".technical-book",
+        "ratio": 6.034173814959852
+      }
+    ]
+  },
+  {
+    "name": "mobile",
+    "width": 390,
+    "height": 844,
+    "pageWidth": 390,
+    "viewport": 390,
+    "overflow": [],
+    "canvas": {
+      "right": 390,
+      "bottom": 356
+    },
+    "panel": {
+      "left": 20,
+      "top": 444
+    },
+    "font": "\"Be Vietnam Pro\", \"Segoe UI\", system-ui, sans-serif",
+    "fontSize": "16px",
+    "fontReady": true,
+    "targets": [
+      {
+        "id": "robot",
+        "width": 131.578125,
+        "height": 52
+      },
+      {
+        "id": "music-box",
+        "width": 109.953125,
+        "height": 52
+      },
+      {
+        "id": "train",
+        "width": 87.78125,
+        "height": 52
+      },
+      {
+        "id": "clock",
+        "width": 100.703125,
+        "height": 52
+      }
+    ],
+    "renderedFonts": [
+      {
+        "familyName": "Be Vietnam Pro",
+        "postScriptName": "BeVietnamPro-Regular",
+        "isCustomFont": true,
+        "glyphCount": 49
+      }
+    ],
+    "contrast": [
+      {
+        "selector": ".customer-request",
+        "ratio": 11.735044181282836
+      },
+      {
+        "selector": ".customer-name",
+        "ratio": 5.945877477846323
+      },
+      {
+        "selector": ".detail-heading",
+        "ratio": 5.945877477846323
+      },
+      {
+        "selector": ".repair-progress p",
+        "ratio": 5.945877477846323
+      },
+      {
+        "selector": ".start-repair",
+        "ratio": 7.289231762229313
+      },
+      {
+        "selector": ".technical-book",
+        "ratio": 6.034173814959852
+      }
+    ]
+  }
+]

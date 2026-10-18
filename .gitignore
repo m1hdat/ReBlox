@@ -1,0 +1,22 @@
+# Phụ thuộc, build
+node_modules/
+dist/
+.vite/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Bí mật, file nén, IDE
+.env
+.env.*
+!.env.example
+*.zip
+.vscode/
+
+# Chỉ giữ README ở thư mục gốc, bỏ README trong thư mục con
+README.md
+!/README.md

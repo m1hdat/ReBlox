@@ -1,0 +1,55 @@
+[
+  {
+    "name": "desktop",
+    "width": 1366,
+    "height": 768,
+    "layout": {
+      "canvas": {
+        "x": 370,
+        "y": 159.796875,
+        "width": 996,
+        "height": 536.203125
+      },
+      "library": {
+        "x": 0,
+        "width": 370
+      },
+      "play": {
+        "top": 704,
+        "bottom": 752
+      },
+      "scrollWidth": 1366,
+      "viewport": 1366,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 768,
+      "pageWidth": 1366,
+      "header": {
+        "y": 0,
+        "bottom": 75.78125,
+        "width": 1366,
+        "height": 75.78125
+      },
+      "canvas": {
+        "y": 119.78125,
+        "bottom": 703,
+        "width": 1366,
+        "height": 583.21875
+      },
+      "controls": {
+        "y": 703,
+        "bottom": 768,
+        "width": 1366,
+        "height": 65
+      },
+      "dpad": {
+        "y": 0,
+        "bottom": 0,
+        "width": 0,
+        "height": 0
+      }
+    },
+    "errors": []
+  }
+]

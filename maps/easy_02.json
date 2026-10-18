@@ -1,0 +1,43 @@
+{
+  "id": "easy_02",
+  "name": "Hộp nhạc nhỏ",
+  "description": "Hành lang hẹp buộc phải đổi tư thế của viên pin.",
+  "difficulty": "easy",
+  "status": "playable",
+  "rows": 4,
+  "cols": 12,
+  "grid": [
+    "####........",
+    "####........",
+    "..##........",
+    "..#########G"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    3,
+    11
+  ],
+  "switches": [],
+  "bridges": [],
+  "theme": {
+    "object": "music_box",
+    "palette": "peach"
+  },
+  "solvable": true,
+  "reference_solution": [
+    "RIGHT",
+    "RIGHT",
+    "DOWN",
+    "LEFT",
+    "DOWN",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT"
+  ]
+}

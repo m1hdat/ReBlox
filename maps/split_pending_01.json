@@ -1,0 +1,29 @@
+{
+  "id": "split_pending_01",
+  "name": "Máy tách linh kiện (PENDING)",
+  "description": "Cần cơ chế split switch — CHƯA cài. Bị loại khỏi danh sách chơi/test.",
+  "difficulty": "pending",
+  "status": "pending",
+  "rows": 3,
+  "cols": 7,
+  "grid": [
+    "####...",
+    "#X##..G",
+    "####..."
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    1,
+    6
+  ],
+  "switches": [],
+  "bridges": [],
+  "theme": {
+    "object": "splitter_machine",
+    "palette": "lavender"
+  },
+  "pending_reason": "Cơ chế split/cube switching/rejoin chưa được cài đặt (xem PROJECT_STATUS.md)."
+}

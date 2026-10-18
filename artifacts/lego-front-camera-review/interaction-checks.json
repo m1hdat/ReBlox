@@ -1,0 +1,10 @@
+{
+  "slowDrag": true,
+  "clickJitter": true,
+  "frontLimits": true,
+  "dragToTop": true,
+  "reducedMotion": false,
+  "singleCanvas": true,
+  "gameSteps": 0,
+  "errors": []
+}

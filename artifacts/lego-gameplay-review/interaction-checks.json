@@ -1,0 +1,13 @@
+{
+  "slowDrag": true,
+  "clickJitter": true,
+  "frontLimits": true,
+  "dragToTop": true,
+  "legoGameplay": true,
+  "robotPersistsAfterOrbitAndMove": true,
+  "restart": true,
+  "reducedMotion": false,
+  "singleCanvas": true,
+  "gameSteps": 1,
+  "errors": []
+}

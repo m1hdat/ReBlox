@@ -1,0 +1,307 @@
+[
+  {
+    "name": "desktop",
+    "width": 1366,
+    "height": 768,
+    "layout": {
+      "canvas": {
+        "x": 370,
+        "y": 159.796875,
+        "width": 996,
+        "height": 536.203125,
+        "bottom": 696
+      },
+      "library": {
+        "x": 0,
+        "width": 370
+      },
+      "play": {
+        "top": 704,
+        "bottom": 752
+      },
+      "toolbar": {
+        "left": 1048.578125,
+        "right": 1346,
+        "top": 169.796875,
+        "bottom": 209.796875
+      },
+      "headerHeight": 83.796875,
+      "scrollWidth": 1366,
+      "viewport": 1366,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 768,
+      "pageWidth": 1366,
+      "header": {
+        "y": 0,
+        "bottom": 75.78125,
+        "width": 1366,
+        "height": 75.78125
+      },
+      "canvas": {
+        "y": 119.78125,
+        "bottom": 703,
+        "width": 1366,
+        "height": 583.21875
+      },
+      "controls": {
+        "y": 703,
+        "bottom": 768,
+        "width": 1366,
+        "height": 65
+      },
+      "dpad": {
+        "y": 0,
+        "bottom": 0,
+        "width": 0,
+        "height": 0
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "large-desktop",
+    "width": 1920,
+    "height": 1080,
+    "layout": {
+      "canvas": {
+        "x": 370,
+        "y": 159.796875,
+        "width": 1550,
+        "height": 848.203125,
+        "bottom": 1008
+      },
+      "library": {
+        "x": 0,
+        "width": 370
+      },
+      "play": {
+        "top": 1016,
+        "bottom": 1064
+      },
+      "toolbar": {
+        "left": 1602.578125,
+        "right": 1900,
+        "top": 169.796875,
+        "bottom": 209.796875
+      },
+      "headerHeight": 83.796875,
+      "scrollWidth": 1920,
+      "viewport": 1920,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 1080,
+      "pageWidth": 1920,
+      "header": {
+        "y": 0,
+        "bottom": 75.78125,
+        "width": 1920,
+        "height": 75.78125
+      },
+      "canvas": {
+        "y": 119.78125,
+        "bottom": 1015,
+        "width": 1920,
+        "height": 895.21875
+      },
+      "controls": {
+        "y": 1015,
+        "bottom": 1080,
+        "width": 1920,
+        "height": 65
+      },
+      "dpad": {
+        "y": 0,
+        "bottom": 0,
+        "width": 0,
+        "height": 0
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "mobile",
+    "width": 390,
+    "height": 844,
+    "layout": {
+      "canvas": {
+        "x": 0,
+        "y": 202.59375,
+        "width": 390,
+        "height": 464.1875,
+        "bottom": 666.78125
+      },
+      "library": {
+        "x": 0,
+        "width": 390
+      },
+      "play": {
+        "top": 784,
+        "bottom": 832
+      },
+      "toolbar": {
+        "left": 74.578125,
+        "right": 378,
+        "top": 211.59375,
+        "bottom": 261.59375
+      },
+      "headerHeight": 126.59375,
+      "scrollWidth": 390,
+      "viewport": 390,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 844,
+      "pageWidth": 390,
+      "header": {
+        "y": 0,
+        "bottom": 72,
+        "width": 390,
+        "height": 72
+      },
+      "canvas": {
+        "y": 116,
+        "bottom": 730,
+        "width": 390,
+        "height": 614
+      },
+      "controls": {
+        "y": 730,
+        "bottom": 844,
+        "width": 390,
+        "height": 114
+      },
+      "dpad": {
+        "y": 741,
+        "bottom": 834,
+        "width": 142,
+        "height": 93
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "width": 844,
+    "height": 390,
+    "layout": {
+      "canvas": {
+        "x": 200,
+        "y": -153,
+        "width": 644,
+        "height": 244,
+        "bottom": 91
+      },
+      "library": {
+        "x": 0,
+        "width": 844
+      },
+      "play": {
+        "top": 330,
+        "bottom": 378
+      },
+      "toolbar": {
+        "left": 528.578125,
+        "right": 832,
+        "top": -144,
+        "bottom": -94
+      },
+      "headerHeight": 244,
+      "scrollWidth": 844,
+      "viewport": 844,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 390,
+      "pageWidth": 844,
+      "header": {
+        "y": 0,
+        "bottom": 72,
+        "width": 844,
+        "height": 72
+      },
+      "canvas": {
+        "y": 116,
+        "bottom": 390,
+        "width": 668,
+        "height": 274
+      },
+      "controls": {
+        "y": 72,
+        "bottom": 390,
+        "width": 176,
+        "height": 318
+      },
+      "dpad": {
+        "y": 156.5,
+        "bottom": 249.5,
+        "width": 142,
+        "height": 93
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "small-mobile",
+    "width": 320,
+    "height": 740,
+    "layout": {
+      "canvas": {
+        "x": 0,
+        "y": 78.1875,
+        "width": 320,
+        "height": 407,
+        "bottom": 485.1875
+      },
+      "library": {
+        "x": 0,
+        "width": 320
+      },
+      "play": {
+        "top": 680,
+        "bottom": 728
+      },
+      "toolbar": {
+        "left": 4.578125,
+        "right": 308,
+        "top": 87.1875,
+        "bottom": 137.1875
+      },
+      "headerHeight": 126.59375,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 740,
+      "pageWidth": 320,
+      "header": {
+        "y": 0,
+        "bottom": 79.375,
+        "width": 320,
+        "height": 79.375
+      },
+      "canvas": {
+        "y": 123.375,
+        "bottom": 626,
+        "width": 320,
+        "height": 502.625
+      },
+      "controls": {
+        "y": 626,
+        "bottom": 740,
+        "width": 320,
+        "height": 114
+      },
+      "dpad": {
+        "y": 637,
+        "bottom": 730,
+        "width": 142,
+        "height": 93
+      }
+    },
+    "errors": []
+  }
+]

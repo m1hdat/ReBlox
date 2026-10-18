@@ -1,0 +1,124 @@
+[
+  {
+    "name": "desktop",
+    "width": 1366,
+    "height": 768,
+    "layout": {
+      "canvas": {
+        "x": 370,
+        "y": 159.796875,
+        "width": 996,
+        "height": 536.203125,
+        "bottom": 696
+      },
+      "library": {
+        "x": 0,
+        "width": 370
+      },
+      "play": {
+        "top": 704,
+        "bottom": 752
+      },
+      "toolbar": {
+        "left": 1048.578125,
+        "right": 1346,
+        "top": 169.796875,
+        "bottom": 209.796875
+      },
+      "headerHeight": 83.796875,
+      "scrollWidth": 1366,
+      "viewport": 1366,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 768,
+      "pageWidth": 1366,
+      "header": {
+        "y": 0,
+        "bottom": 75.78125,
+        "width": 1366,
+        "height": 75.78125
+      },
+      "canvas": {
+        "y": 119.78125,
+        "bottom": 703,
+        "width": 1366,
+        "height": 583.21875
+      },
+      "controls": {
+        "y": 703,
+        "bottom": 768,
+        "width": 1366,
+        "height": 65
+      },
+      "dpad": {
+        "y": 0,
+        "bottom": 0,
+        "width": 0,
+        "height": 0
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "small-mobile",
+    "width": 320,
+    "height": 740,
+    "layout": {
+      "canvas": {
+        "x": 0,
+        "y": 78.1875,
+        "width": 320,
+        "height": 407,
+        "bottom": 485.1875
+      },
+      "library": {
+        "x": 0,
+        "width": 320
+      },
+      "play": {
+        "top": 680,
+        "bottom": 728
+      },
+      "toolbar": {
+        "left": 4.578125,
+        "right": 308,
+        "top": 87.1875,
+        "bottom": 137.1875
+      },
+      "headerHeight": 126.59375,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "pixelRatio": 1
+    },
+    "game": {
+      "pageHeight": 740,
+      "pageWidth": 320,
+      "header": {
+        "y": 0,
+        "bottom": 79.375,
+        "width": 320,
+        "height": 79.375
+      },
+      "canvas": {
+        "y": 123.375,
+        "bottom": 626,
+        "width": 320,
+        "height": 502.625
+      },
+      "controls": {
+        "y": 626,
+        "bottom": 740,
+        "width": 320,
+        "height": 114
+      },
+      "dpad": {
+        "y": 637,
+        "bottom": 730,
+        "width": 142,
+        "height": 93
+      }
+    },
+    "errors": []
+  }
+]

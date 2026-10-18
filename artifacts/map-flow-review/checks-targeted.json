@@ -1,0 +1,197 @@
+[
+  {
+    "name": "mobile",
+    "width": 390,
+    "height": 844,
+    "layout": {
+      "canvas": {
+        "x": 0,
+        "y": -438.609375,
+        "width": 390,
+        "height": 295.390625
+      },
+      "library": {
+        "x": 0,
+        "y": -143.21875,
+        "width": 390
+      },
+      "play": {
+        "top": 780.40625,
+        "bottom": 832
+      },
+      "pageWidth": 390,
+      "viewportWidth": 390,
+      "viewportHeight": 844
+    },
+    "game": {
+      "pageHeight": 844,
+      "pageWidth": 390,
+      "viewportHeight": 844,
+      "viewportWidth": 390,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 72,
+        "bottom": 72,
+        "right": 390
+      },
+      "canvas": {
+        "x": 0,
+        "y": 116,
+        "width": 390,
+        "height": 614,
+        "bottom": 730,
+        "right": 390
+      },
+      "controls": {
+        "x": 0,
+        "y": 730,
+        "width": 390,
+        "height": 114,
+        "bottom": 844,
+        "right": 390
+      },
+      "dpad": {
+        "x": 20,
+        "y": 741,
+        "width": 142,
+        "height": 93,
+        "bottom": 834,
+        "right": 162
+      },
+      "hud": "Đoàn tàu gỗ"
+    },
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "width": 844,
+    "height": 390,
+    "layout": {
+      "canvas": {
+        "x": 0,
+        "y": -629.609375,
+        "width": 844,
+        "height": 260
+      },
+      "library": {
+        "x": 0,
+        "y": -369.609375,
+        "width": 844
+      },
+      "play": {
+        "top": 326.40625,
+        "bottom": 378
+      },
+      "pageWidth": 844,
+      "viewportWidth": 844,
+      "viewportHeight": 390
+    },
+    "game": {
+      "pageHeight": 390,
+      "pageWidth": 844,
+      "viewportHeight": 390,
+      "viewportWidth": 844,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 72,
+        "bottom": 72,
+        "right": 844
+      },
+      "canvas": {
+        "x": 0,
+        "y": 116,
+        "width": 668,
+        "height": 274,
+        "bottom": 390,
+        "right": 668
+      },
+      "controls": {
+        "x": 668,
+        "y": 72,
+        "width": 176,
+        "height": 318,
+        "bottom": 390,
+        "right": 844
+      },
+      "dpad": {
+        "x": 685.5,
+        "y": 156.5,
+        "width": 142,
+        "height": 93,
+        "bottom": 249.5,
+        "right": 827.5
+      },
+      "hud": "Đoàn tàu gỗ"
+    },
+    "errors": []
+  },
+  {
+    "name": "small-mobile",
+    "width": 320,
+    "height": 740,
+    "layout": {
+      "canvas": {
+        "x": 0,
+        "y": -524.609375,
+        "width": 320,
+        "height": 259
+      },
+      "library": {
+        "x": 0,
+        "y": -265.609375,
+        "width": 320
+      },
+      "play": {
+        "top": 676.40625,
+        "bottom": 728
+      },
+      "pageWidth": 320,
+      "viewportWidth": 320,
+      "viewportHeight": 740
+    },
+    "game": {
+      "pageHeight": 740,
+      "pageWidth": 320,
+      "viewportHeight": 740,
+      "viewportWidth": 320,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 79.375,
+        "bottom": 79.375,
+        "right": 320
+      },
+      "canvas": {
+        "x": 0,
+        "y": 123.375,
+        "width": 320,
+        "height": 502.625,
+        "bottom": 626,
+        "right": 320
+      },
+      "controls": {
+        "x": 0,
+        "y": 626,
+        "width": 320,
+        "height": 114,
+        "bottom": 740,
+        "right": 320
+      },
+      "dpad": {
+        "x": 20,
+        "y": 637,
+        "width": 142,
+        "height": 93,
+        "bottom": 730,
+        "right": 162
+      },
+      "hud": "Đoàn tàu gỗ"
+    },
+    "errors": []
+  }
+]

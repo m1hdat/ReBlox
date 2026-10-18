@@ -1,0 +1,43 @@
+{
+  "id": "fragile_01",
+  "name": "Chiếc đồng hồ nhỏ",
+  "description": "Ô kính mỏng 'F' sẽ vỡ nếu đứng thẳng lên. Hãy nằm xuống khi băng qua.",
+  "difficulty": "medium",
+  "status": "playable",
+  "rows": 3,
+  "cols": 12,
+  "grid": [
+    "####....####",
+    "####FFFF###G",
+    "####FFFF####"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    1,
+    11
+  ],
+  "switches": [],
+  "bridges": [],
+  "theme": {
+    "object": "tiny_clock",
+    "palette": "lavender"
+  },
+  "solvable": true,
+  "reference_solution": [
+    "RIGHT",
+    "RIGHT",
+    "DOWN",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "UP",
+    "RIGHT",
+    "DOWN",
+    "RIGHT"
+  ]
+}

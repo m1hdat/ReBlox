@@ -1,0 +1,30 @@
+{
+  "id": "unsolvable_01",
+  "name": "Hòn đảo xa",
+  "description": "Khoảng trống rộng 2 ô giữa hai đảo: nhìn như gần nhưng viên pin không thể qua.",
+  "difficulty": "easy",
+  "status": "playable",
+  "rows": 3,
+  "cols": 8,
+  "grid": [
+    "####....",
+    "####..#G",
+    "####...."
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    1,
+    7
+  ],
+  "switches": [],
+  "bridges": [],
+  "theme": {
+    "object": "island",
+    "palette": "sage"
+  },
+  "solvable": false,
+  "reference_solution": null
+}

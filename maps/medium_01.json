@@ -1,0 +1,44 @@
+{
+  "id": "medium_01",
+  "name": "Đoàn tàu gỗ",
+  "description": "Có hai đường vòng quanh khoảng trống; thử tìm đường ngắn nhất.",
+  "difficulty": "medium",
+  "status": "playable",
+  "rows": 4,
+  "cols": 12,
+  "grid": [
+    "############",
+    "##........##",
+    "##........##",
+    "###########G"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    3,
+    11
+  ],
+  "switches": [],
+  "bridges": [],
+  "theme": {
+    "object": "toy_train",
+    "palette": "blue"
+  },
+  "solvable": true,
+  "reference_solution": [
+    "DOWN",
+    "RIGHT",
+    "UP",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "DOWN",
+    "RIGHT",
+    "DOWN"
+  ]
+}
