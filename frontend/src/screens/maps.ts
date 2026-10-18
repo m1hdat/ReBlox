@@ -18,7 +18,7 @@ export function mapThumbnail(map: GameMap) {
     if (tile === "h") cells.push(`<rect x="${x + 5}" y="${y + 5}" width="6" height="6" fill="#b65b42"/>`);
     if (tile === "F") cells.push(`<path d="m${x + 4} ${y + 3} 4 5-2 2 5 3" stroke="#638996" fill="none"/>`);
     if (tile === "G") cells.push(`<rect x="${x + 4}" y="${y + 4}" width="8" height="8" fill="#3e6261"/>`);
-    if (tile === "X") cells.push(`<path d="m${x + 5} ${y + 5} 6 6m0-6-6 6" stroke="#665376"/>`);
+    if (tile === "X") cells.push(`<path d="M${x+6} ${y+4}q-4 4 0 8m4-8q4 4 0 8" stroke="#665376" stroke-width="1.4" fill="none"/>`);
   }));
   for (const bridge of map.bridges) for (const [r, c] of bridge.cells) cells.push(`<rect x="${c * size + 1}" y="${r * size + 1}" width="14" height="14" rx="2" fill="${bridge.initially_open ? "#c6a476" : "#edf2eb"}" stroke="#967a53" stroke-width="1.3"/>`);
   cells.push(`<rect x="${map.start[1] * size + 4}" y="${map.start[0] * size + 3}" width="8" height="10" rx="1" fill="#235f61"/>`);

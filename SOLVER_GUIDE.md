@@ -36,7 +36,7 @@ Các docstring cũ còn nhắc `SOLVER_CONTRACT.md`; hợp đồng và hướng 
 
 ## 2. Mô hình bài toán và giao diện core
 
-Không gian tìm kiếm là đồ thị: **node = `GameState`**, **cạnh = một nước lăn hợp lệ**, **trọng số = `step_cost`**. Mục tiêu là tìm path từ trạng thái được truyền vào đến trạng thái đứng tại đích.
+Không gian tìm kiếm là đồ thị: **node = `GameState`**, **cạnh = một action hợp lệ (lăn, di chuyển cube hoặc đổi cube)**, **trọng số = `step_cost`**. Mục tiêu là tìm path từ trạng thái được truyền vào đến trạng thái đứng tại đích.
 
 ### Các thành phần nên đọc
 
@@ -71,7 +71,7 @@ def solve(game: Game, initial_state: GameState) -> SolverResult:
 
 **Tìm kiếm từ đối số `initial_state`**, không tự thay bằng `game.initial_state()`. API hiện truyền trạng thái đầu bản đồ, nhưng hàm solver vẫn phải làm đúng khi nhận một trạng thái hợp lệ khác.
 
-`game.neighbors()` trả các hành động theo thứ tự cố định **UP → DOWN → LEFT → RIGHT**, bỏ qua nước không hợp lệ. Solver không cần tự tính phép lăn, kiểm tra sàn hay kích hoạt công tắc.
+`game.neighbors()` trả các hành động theo thứ tự cố định **UP → DOWN → LEFT → RIGHT**, thêm **SWITCH_CUBE** ở cuối khi đang tách, bỏ qua nước không hợp lệ. Solver không cần tự tính phép lăn, kiểm tra sàn hay kích hoạt công tắc.
 
 ### Khóa trạng thái phải đầy đủ
 
@@ -83,7 +83,7 @@ g_score: dict[GameState, float] = {initial_state: 0.0}
 parent: dict[GameState, tuple[GameState, str] | None] = {initial_state: None}
 ```
 
-State chứa `block`, `open_bridges` và trường `split` dành sẵn cho tính năng chưa triển khai. Hai trạng thái có cùng vị trí/tư thế nhưng khác cầu mở **là hai node khác nhau**. Dùng riêng `(row, col, orientation)` sẽ làm mất đường đi hợp lệ trên map có công tắc.
+State chứa `block`, `open_bridges` và trường `split` chứa hai vị trí cube và chỉ số cube đang điều khiển khi đã tách. Hai trạng thái có cùng vị trí/tư thế nhưng khác cầu mở **là hai node khác nhau**. Dùng riêng `(row, col, orientation)` sẽ làm mất đường đi hợp lệ trên map có công tắc.
 
 Không chỉnh sửa `game.board`, trạng thái hay dữ liệu map trong quá trình tìm kiếm.
 
@@ -95,7 +95,7 @@ Hàm luôn trả một `SolverResult` khi tìm thấy hoặc không tìm thấy 
 |---|---|
 | `algorithm` | Chính xác `"BFS"`, `"DFS"`, `"UCS"` hoặc `"ASTAR"` |
 | `solved` | `True` khi đã tìm thấy path đến đích |
-| `path` | `list[str]`, mỗi phần tử là `action.value`: `"UP"`, `"DOWN"`, `"LEFT"`, `"RIGHT"` |
+| `path` | `list[str]`, mỗi phần tử là `action.value`: `"UP"`, `"DOWN"`, `"LEFT"`, `"RIGHT"`, `"SWITCH_CUBE"` |
 | `expanded_nodes` | Số lần lấy một entry hợp lệ khỏi frontier và gọi `neighbors()` |
 | `generated_nodes` | Tổng successor được trả về từ `neighbors()`, trước lọc trùng |
 | `solution_length` | `len(path)` khi solved; `None` khi không có nghiệm |
@@ -170,7 +170,7 @@ Lưu `parent[next_state] = (state, action.value)` khi nhận node mới hoặc k
 | Cost model | Chi phí một nước đi |
 |---|---|
 | `uniform` | Luôn `1.0` |
-| `orientation_weighted` | `2.0` nếu trạng thái **trước nước đi** là STANDING; còn lại `1.0` |
+| `orientation_weighted` | `2.0` nếu khối nguyên đứng trước nước lăn; di chuyển cube/đổi cube và các nước còn lại `1.0` |
 
 Luôn dùng `step_cost` từ `neighbors()`. BFS/DFS cũng phải báo đúng chi phí khi chạy với `orientation_weighted`; không gán `solution_cost = len(path)` trong mọi trường hợp.
 
@@ -230,13 +230,15 @@ Khởi đầu bằng `h=0` là hợp lệ. Khi cần heuristic có thông tin, d
 
 ```python
 def heuristic(game: Game, state: GameState) -> float:
+    if game.board.splitters or state.split is not None:
+        return 0.0  # teleport phá vỡ cận dưới Manhattan; baseline an toàn cho map split
     goal_row, goal_col = game.board.goal
     block = state.block
     distance = abs(block.row - goal_row) + abs(block.col - goal_col)
     return (distance / 2.0) * game.cost_model.min_cost
 ```
 
-Đây là heuristic cho chế độ khối nguyên hiện tại, không bao gồm cơ chế split chưa triển khai.
+Manhattan/2 chỉ áp dụng trên map không có teleport/split. Trên **toàn bộ state của map có splitter**, ví dụ dùng `h=0` để giữ admissible/consistent. Muốn cải thiện hiệu năng phải thiết kế cận dưới có tính cả các cạnh teleport; không chỉ trả 0 khi state đang split rồi dùng Manhattan khi đã gộp.
 
 **Vì sao admissible?** Mỗi nước lăn chỉ thay đổi một tọa độ của ô neo, nhiều nhất 2 ô. Để giảm khoảng cách Manhattan `d` về 0 cần ít nhất `d/2` nước; mỗi nước tốn ít nhất `min_cost`. Việc bỏ qua vật cản, tư thế cuối và cầu/công tắc chỉ làm cận dưới này yếu hơn. Tại goal, `h=0`.
 
@@ -274,7 +276,7 @@ So sánh với UCS trên vài map là kiểm tra hồi quy hữu ích, không th
 | `G` | Ô đích: chỉ thắng khi đứng đúng ô |
 | `s` | Soft switch: kích hoạt khi bất kỳ phần khối nào chạm |
 | `h` | Heavy switch: chỉ kích hoạt khi đứng |
-| `X` | Split switch: chưa hỗ trợ |
+| `X` | Split switch: đứng lên để teleport và tách; cần `splitters[].destinations` |
 
 Công tắc tác động khi khối đáp xuống sau mỗi nước đi: `toggle` đảo trạng thái cầu, `open` mở cầu, `close` đóng cầu. `open` không tự đóng khi rời công tắc; một công tắc khác vẫn có thể đóng cầu đó. Nếu khối chạm nhiều công tắc, core xử lý từng công tắc theo các ô chiếm giữ.
 
@@ -287,7 +289,7 @@ Thứ tự core xử lý một nước đi:
 
 Solver chỉ lấy successor hợp lệ từ core, không tự viết phiên bản luật khác. Goal là trạng thái kết thúc; core không cho đi tiếp từ goal.
 
-`SWITCH_CUBE` tồn tại trong enum nhưng chưa được hỗ trợ. Không sinh hành động này. Map dùng split bị loader thông thường từ chối; API chơi/giải từ chối map có trạng thái `pending`.
+`SWITCH_CUBE` đổi cube điều khiển, chi phí 1 và tính là một action trong `solution_length`. `neighbors` tự sinh khi đang split; solver không hard-code bốn hướng. Đứng trên X sẽ teleport tới hai `splitters[].destinations`; cube đi từng ô, kích hoạt soft nhưng không heavy, không thể thắng một mình; hai cube kề cạnh tự gộp thành khối nằm. Cube đứng yên không kích hoạt lại công tắc mỗi khi cube kia di chuyển. `split_01` là map split chơi được; `split_pending_01` cũ vẫn là template thiếu destinations và bị loại khỏi chơi.
 
 ## 8. Kiểm thử và chạy thử
 
@@ -315,6 +317,8 @@ cd backend
 | `easy_01`, `easy_02`, `medium_01` | Có nghiệm; path hợp lệ, đến goal, length và cost đúng |
 | `fragile_01` | Path không đứng trên ô dễ vỡ |
 | `bridge_01` | Tìm kiếm giữ trạng thái cầu, path replay được qua công tắc |
+| `heavy_01`, `toggle_01`, `permanent_01`, `advanced_01` | Kiểm tra đủ loại công tắc, hành vi cầu và fragile kết hợp |
+| `split_01` | Path chứa SWITCH_CUBE; teleport, cube nhấn soft, gộp và tới đích; khóa state gồm active |
 | `unsolvable_01` | Dừng, `solved=False`, path rỗng, length/cost là `None` |
 | Cả hai cost model | Cost bằng tổng chi phí thật, không mặc định bằng số nước |
 | Initial state đã là goal | Nghiệm rỗng, cost 0, không mở rộng |
@@ -419,3 +423,15 @@ Map `pending` bị `/api/solve` từ chối bằng HTTP 400; thuật toán lạ 
 - [ ] `scripts/run_tests.py` và test riêng đều vượt qua; đã thử API/giao diện nếu báo hoàn thành tích hợp.
 - [ ] PR chỉ gồm file được phân công và test riêng, không chứa cache hay môi trường cài đặt.
 - [ ] Mô tả PR nêu thay đổi, quy ước tie-breaking, lệnh kiểm tra và kết quả thực tế; không đưa metric chưa đo.
+
+## Bộ map Advanced đã kiểm chứng
+
+| Map | Cơ chế | Lời giải tham chiếu (actions) |
+|---|---|---|
+| `heavy_01` | Heavy mở cầu | 13 |
+| `toggle_01` | Soft đảo cầu | 10 |
+| `permanent_01` | Soft đóng cố định | 8 |
+| `advanced_01` | Fragile + soft toggle + heavy permanent | 12 |
+| `split_01` | Teleport, đổi cube, cube nhấn soft, gộp và tới đích | 13 |
+
+Sinh lại riêng 5 map: `python scripts/build_advanced_maps.py`. Mọi map mới phải có nghiệm và replay hợp lệ trước khi được ghi. `unsolvable_01` cũ cố ý vô nghiệm, không thuộc bộ Advanced mới.

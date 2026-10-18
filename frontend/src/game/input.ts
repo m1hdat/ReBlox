@@ -1,6 +1,7 @@
 import type { ActionName } from "../api/client";
 
 const KEYS: Record<string, ActionName> = {
+  " ": "SWITCH_CUBE",
   ArrowUp: "UP", ArrowDown: "DOWN", ArrowLeft: "LEFT", ArrowRight: "RIGHT",
   w: "UP", s: "DOWN", a: "LEFT", d: "RIGHT", W: "UP", S: "DOWN", A: "LEFT", D: "RIGHT",
 };

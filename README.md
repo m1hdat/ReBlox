@@ -18,7 +18,7 @@ Trong một tiệm sửa đồ chơi, bạn lăn linh kiện 1×1×2 qua bàn l�
 | Tiến độ và kỷ lục chơi tay | Lưu trong `localStorage` của trình duyệt |
 | Sổ kỹ thuật: gọi solver, chọn cost model, hiển thị metric và replay | Đã có luồng tích hợp |
 | BFS / DFS / UCS / A\* | **Cả bốn còn là placeholder** trong `backend/app/solvers/` |
-| Split switch, tách/đổi/gộp hai khối nhỏ | Chưa hỗ trợ; bản đồ thử nghiệm được đánh dấu `pending` |
+| Split switch, tách/đổi/gộp hai khối nhỏ | Đã hỗ trợ trong core/API và giao diện; thử `split_01` (Space hoặc nút Đổi khối) |
 
 > Có nút thuật toán trên giao diện chưa có nghĩa thuật toán đã được cài đặt. Solver còn thiếu trả `not_implemented`. Chức năng **MOCK** chỉ phát lời giải tham chiếu có sẵn trong map, không tạo số liệu thuật toán.
 
@@ -90,7 +90,7 @@ Các nhiệm vụ chính được nhóm theo đồ chơi trong [catalog.ts](fron
 | Tàu gỗ | `medium_01` |
 | Đồng hồ | `fragile_01` |
 
-**Sổ kỹ thuật** cung cấp danh sách đầy đủ 7 map, trong đó `unsolvable_01` dùng để thử trường hợp vô nghiệm và `split_pending_01` bị vô hiệu hóa vì chưa hỗ trợ split. Replay trong Sổ kỹ thuật không cộng tiến độ hoặc kỷ lục chơi tay; giao diện hiện chưa hiển thị trace mở rộng từng node.
+**Sổ kỹ thuật** cung cấp danh sách đầy đủ 12 map, trong đó `unsolvable_01` dùng để thử trường hợp vô nghiệm và `split_pending_01` bị vô hiệu hóa vì template này thiếu destinations (dùng `split_01` để chơi split). Replay trong Sổ kỹ thuật không cộng tiến độ hoặc kỷ lục chơi tay; giao diện hiện chưa hiển thị trace mở rộng từng node.
 
 ## Kiến trúc
 
@@ -176,3 +176,13 @@ npm run test:browser
 - **Thêm bản đồ:** tham khảo [map có cầu mẫu](maps/bridge_01.json) và [bộ nạp/kiểm tra cấu trúc](backend/app/core/board.py), thêm JSON vào `maps/` rồi chạy validator. Cập nhật `frontend/src/app/catalog.ts` nếu muốn đưa map vào nhóm nhiệm vụ chính.
 - **Thay đổi luật hoặc hợp đồng chung:** thống nhất với người phụ trách tích hợp trước khi chỉnh core, API, benchmark hoặc `SolverResult`.
 - **Gửi thay đổi:** dùng nhánh riêng và Pull Request có mô tả hành vi, phạm vi file và kết quả kiểm tra thực tế. Không commit môi trường ảo, `node_modules`, cache hoặc thư mục build.
+
+## Map Advanced
+
+Các map mới đều đã được tìm đường và replay tới đích: `heavy_01` (13 actions), `toggle_01` (10), `permanent_01` (8), `advanced_01` (12), `split_01` (13). Các map được bổ sung vào bốn nhóm linh kiện hiện có; không chuyển nhóm các map cũ.
+
+Split: đứng lên ô ( ), hai cube dịch chuyển tới vị trí trong JSON; dùng Space/nút Đổi khối, đưa hai cube kề cạnh để tự gộp. Cube đơn kích hoạt soft, không kích hoạt heavy và chưa thể thắng. Đổi cube tốn 1 action/1 cost ở cả hai cost model.
+
+`unsolvable_01` vẫn là ca kiểm thử cố ý vô nghiệm; `split_pending_01` là template cũ thiếu đích dịch chuyển, không phải map split mới.
+
+Kiểm chứng: `python scripts/validate_maps.py`; sinh lại riêng map Advanced: `python scripts/build_advanced_maps.py`. Hai lệnh cần Python trong venv backend. Bốn solver của nhóm vẫn là placeholder.

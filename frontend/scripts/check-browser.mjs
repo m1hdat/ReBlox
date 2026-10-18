@@ -7,7 +7,7 @@ const baseURL = process.env.FRONTEND_TEST_URL ?? "http://127.0.0.1:5173";
 const output = resolve("../artifacts/lego-gameplay-review"); await mkdir(output, { recursive: true });
 const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",");
 const interactionOnly = process.argv.includes('--interaction-only');
-const groups = { robot: ["easy_01", "bridge_01"], "music-box": ["easy_02"], train: ["medium_01"], clock: ["fragile_01"] };
+const groups = { robot: ["easy_01", "bridge_01", "heavy_01", "split_01"], "music-box": ["easy_02", "permanent_01"], train: ["medium_01", "toggle_01"], clock: ["fragile_01", "advanced_01"] };
 const browser = await chromium.launch({ channel: "msedge", headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 const results = [];
 try {
@@ -29,11 +29,11 @@ try {
     const openGroup = async (id) => { await menu(); await click(`[data-action=component][data-id="${id}"]`); assert.deepEqual(await page.locator('.map-option').evaluateAll((els) => els.map((el) => el.dataset.id)), groups[id]); };
     const play = async () => { await click('[data-action=play-map]'); await closeHelp(); };
     const save = () => page.evaluate(() => JSON.parse(localStorage.getItem('little-repair-shop.save.v1')));
-    const solve = async (id) => { const map = await (await context.request.get(`${baseURL}/api/maps/${id}`)).json(), keys = { UP:'ArrowUp', DOWN:'ArrowDown', LEFT:'ArrowLeft', RIGHT:'ArrowRight' }; for (const action of map.reference_solution) { await page.locator('#screen').focus(); await page.keyboard.press(keys[action]); await idle(); } await page.locator('.result-panel').waitFor(); };
+    const solve = async (id) => { const map = await (await context.request.get(`${baseURL}/api/maps/${id}`)).json(), keys = { UP:'ArrowUp', DOWN:'ArrowDown', LEFT:'ArrowLeft', RIGHT:'ArrowRight', SWITCH_CUBE:' ' }; for (const action of map.reference_solution) { await page.locator('#screen').focus(); await page.keyboard.press(keys[action]); await idle(); } await page.locator('.result-panel').waitFor(); };
     await page.goto(baseURL); await page.waitForFunction(() => !document.querySelector('#shop-entry').disabled);
     await click('#shop-entry'); assert.equal(await page.locator('body').getAttribute('data-screen'),'components'); assert.equal(await page.locator('.component-option').count(),4);
     await screenshot('component-menu'); await openGroup('train');
-    assert.equal(await page.locator('.map-option').count(),1);
+    assert.equal(await page.locator('.map-option').count(),2);
     const layout = await page.evaluate(() => {
       const canvas=document.querySelector('canvas').getBoundingClientRect(), library=document.querySelector('.map-library').getBoundingClientRect(), play=document.querySelector('[data-action=play-map]').getBoundingClientRect();
       const toolbar=document.querySelector('.preview-toolbar').getBoundingClientRect(), header=document.querySelector('.preview-header').getBoundingClientRect();
@@ -96,7 +96,7 @@ try {
     await openGroup('clock'); await click('[data-action=camera-reset]'); await previewShot('wide-default');
     await click('[data-action=camera-right]'); await click('[data-action=camera-right]'); await previewShot('wide-front-right');
     await click('[data-action=camera-top]'); await previewShot('wide-top');
-    await openGroup('robot'); assert.equal(await page.locator('.map-option').count(),2);
+    await openGroup('robot'); assert.equal(await page.locator('.map-option').count(),4);
     await click('[data-action=camera-top]'); await select('bridge_01'); assert.equal(await page.locator('[data-action=camera-top]').getAttribute('aria-pressed'),'true','map change preserves user camera');
     await previewShot('closed-bridge-top'); await click('[data-action=camera-reset]');
     await previewShot('closed-bridge-default'); await click('[data-action=camera-right]'); await click('[data-action=camera-right]'); await previewShot('closed-bridge-front-right');
@@ -114,8 +114,8 @@ try {
     await click('[data-action=pause]'); await click('#modal [data-action=settings]'); await click('#modal [data-action=close-modal]'); assert(await page.locator('.pause-paper').isVisible());
     await click('#modal [data-action=maps]'); assert.equal(await page.locator('.map-option[aria-pressed=true]').getAttribute('data-id'),'medium_01');
     await click('[data-action=continue]'); await closeHelp(); assert.equal(await page.locator('#move-count').textContent(),'1'); await click('[data-action=restart]'); assert.equal(await page.locator('.help-paper').count(),0);
-    await solve('medium_01'); assert.equal(await page.locator('.result-panel .primary').getAttribute('data-action'),'components'); await screenshot('result');
-    await click('.result-panel .primary'); assert.match(await page.locator('[data-id=train] .component-progress').textContent(),/1\/1/);
+    await solve('medium_01'); await click('[data-action=next]'); await closeHelp(); await solve('toggle_01'); assert.equal(await page.locator('.result-panel .primary').getAttribute('data-action'),'components'); await screenshot('result');
+    await click('.result-panel .primary'); assert.match(await page.locator('[data-id=train] .component-progress').textContent(),/2\/2/);
     await openGroup('robot'); await select('easy_01'); await previewShot('robot-map-preview'); await play();
     await previewShot('robot-game-default'); await click('[data-action=camera-right]'); await previewShot('robot-game-rotated');
     await click('[data-action=camera-top]'); await previewShot('robot-game-top'); await click('[data-action=camera-reset]');

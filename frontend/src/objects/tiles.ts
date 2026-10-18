@@ -58,7 +58,12 @@ export function createSwitchTile(kind: "soft" | "heavy", color: number): ButtonP
 }
 export function createSplitMachineTile() {
   const group = createFloorTile(COLORS.lavender);
-  for (const x of [-0.22, 0.22]) { const slot = roundedBox(0.3, 0.12, 0.58, COLORS.walnut); slot.position.set(x, 0.06, 0); group.add(slot); }
+  for (const direction of [-1, 1]) {
+    const bracket = new THREE.Mesh(new THREE.TorusGeometry(.24, .035, 6, 16, Math.PI), matte(0x594477));
+    bracket.position.set(direction * .07, .04, 0);
+    bracket.rotation.set(-Math.PI / 2, 0, direction === -1 ? Math.PI / 2 : -Math.PI / 2);
+    group.add(bracket);
+  }
   return group;
 }
 export interface BridgeParts { group: THREE.Group; planks: THREE.Group[]; ghosts: THREE.LineSegments[]; }

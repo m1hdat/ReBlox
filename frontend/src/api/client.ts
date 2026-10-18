@@ -1,14 +1,16 @@
 // Lớp mỏng gọi REST backend. Mọi luật chơi nằm ở Python; frontend KHÔNG tự tính nước đi.
 export type Orientation = "STANDING" | "HORIZONTAL" | "VERTICAL";
-export type ActionName = "UP" | "DOWN" | "LEFT" | "RIGHT";
+export type ActionName = "UP" | "DOWN" | "LEFT" | "RIGHT" | "SWITCH_CUBE";
 
-export interface GameState { row: number; col: number; orientation: Orientation; open_bridges: string[]; }
+export interface SplitState { cubes: [[number, number], [number, number]]; active: number; }
+export interface GameState { row: number; col: number; orientation: Orientation; open_bridges: string[]; split?: SplitState; }
 export interface MapInfo { id: string; name: string; playable: boolean; status: string; difficulty?: string; pending_reason?: string; }
 export interface SwitchDef { pos: [number, number]; kind: "soft" | "heavy"; targets: string[]; effect: string; }
 export interface BridgeDef { id: string; cells: [number, number][]; initially_open: boolean; }
 export interface GameMap {
   id: string; name: string; description?: string; rows: number; cols: number; grid: string[];
   start: [number, number]; goal: [number, number]; switches: SwitchDef[]; bridges: BridgeDef[];
+  splitters?: { pos: [number, number]; destinations: [[number, number], [number, number]] }[];
   theme: { object?: string; palette?: string }; solvable?: boolean;
 }
 export interface StepResponse {

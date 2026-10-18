@@ -5,6 +5,7 @@ export function mapRule(map: GameMap) {
   const rules = [];
   if (map.grid.some((row) => row.includes("F"))) rules.push("Ô nứt chỉ chịu khối nằm; đứng lên sẽ làm ô vỡ.");
   if (map.switches.length) rules.push("Nút tròn nhận khối nằm hoặc đứng. Nút vuông cần khối đứng để điều khiển cầu.");
+  if (map.splitters?.length) rules.push("Đứng lên ô ( ) để tách thành hai cube. Space hoặc Đổi khối để chuyển điều khiển; đưa hai cube kề nhau để gộp. Cube đơn chỉ nhấn được nút tròn và chưa thể thắng.");
   return rules.join(" ") || "Khi khối đang đứng, một lần lăn sẽ chiếm hai ô phía trước. Ô trống không đỡ được khối.";
 }
 export function helpScreen(map: GameMap) {

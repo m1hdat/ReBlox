@@ -76,7 +76,7 @@ def game_step(req: StepRequest):
     try:
         action = Action(req.action)
         st = GameState.from_dict(req.state)
-    except (ValueError, KeyError) as e:
+    except (ValueError, KeyError, TypeError, IndexError) as e:
         raise HTTPException(422, f"dữ liệu không hợp lệ: {e}")
     r = step(b, st, action)
     att = r.attempted_block

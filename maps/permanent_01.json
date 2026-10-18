@@ -1,0 +1,63 @@
+{
+  "id": "permanent_01",
+  "name": "Chốt đóng cố định",
+  "difficulty": "advanced",
+  "status": "playable",
+  "description": "Đi qua nút tròn trên hành lang để đóng cố định cầu phụ. Chạm lại vẫn giữ cầu đóng.",
+  "grid": [
+    "####......",
+    "####......",
+    "####s####G",
+    "####......"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    2,
+    9
+  ],
+  "switches": [
+    {
+      "pos": [
+        2,
+        4
+      ],
+      "kind": "soft",
+      "targets": [
+        "side_bridge"
+      ],
+      "effect": "close"
+    }
+  ],
+  "bridges": [
+    {
+      "id": "side_bridge",
+      "cells": [
+        [
+          0,
+          6
+        ]
+      ],
+      "initially_open": true
+    }
+  ],
+  "theme": {
+    "object": "toy_lamp",
+    "palette": "yellow"
+  },
+  "rows": 4,
+  "cols": 10,
+  "solvable": true,
+  "reference_solution": [
+    "RIGHT",
+    "DOWN",
+    "DOWN",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT"
+  ]
+}

@@ -120,13 +120,43 @@ const watchResources = (object) => {
     oldResources.add(resource); resource.addEventListener("dispose", () => disposed.add(resource));
   }
 };
-scene.boardRoot.children.filter((child) => child !== scene.player.group)
+const reusedCubes = [...scene.cubes];
+scene.boardRoot.children.filter((child) => child !== scene.player.group && !scene.cubes.includes(child))
   .forEach((child) => child.traverse(watchResources));
 scene.environment.traverse(watchResources);
 scene.loadMap(bridgeMap);
 assert(oldResources.size > 0); assert.equal(disposed.size, oldResources.size);
 assert.equal(scene.player.group.children[0], reusedBody);
-console.log("PASS: heavy chỉ diễn hoạt khi đứng; đổi map dispose toàn bộ tài nguyên cũ và giữ player");
+assert.deepEqual(scene.cubes, reusedCubes, "hai cube tái sử dụng qua các map");
+console.log("PASS: heavy chỉ diễn hoạt khi đứng; đổi map dispose toàn bộ tài nguyên cũ và giữ player/cubes");
+
+const splitMap = await (await originalFetch(`${apiBase}/api/maps/split_01`)).json();
+scene.loadMap(splitMap);
+let splitState = (await (await originalFetch(`${apiBase}/api/game/initial`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({map_id:'split_01'})})).json()).state;
+scene.setBlock(splitState);
+let sawSplit = false, sawMerge = false;
+for (const action of splitMap.reference_solution) {
+  const result = await (await originalFetch(`${apiBase}/api/game/step`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({map_id:'split_01',state:splitState,action})})).json();
+  assert(result.valid);
+  await scene.roll(splitState,action,result.state);
+  if(result.state.split) {
+    sawSplit=true; assert(!scene.player.group.visible);
+    scene.cubes.forEach((cube,i)=>{
+      assert(cube.visible);
+      assert.equal(cube.position.y,.5);
+      assert.equal(cube.position.x,result.state.split.cubes[i][1]);
+      assert.equal(cube.position.z,result.state.split.cubes[i][0]);
+      assert.equal(cube.getObjectByName('active-cube').visible,i===result.state.split.active);
+    });
+  } else if(splitState.split) {
+    sawMerge=true; assert(scene.player.group.visible); assert(scene.cubes.every(cube=>!cube.visible));
+  }
+  splitState=result.state;
+}
+assert(sawSplit && sawMerge);
+scene.resetPlayer({row:0,col:0,orientation:'STANDING'});
+assert(scene.player.group.visible && scene.cubes.every(cube=>!cube.visible));
+console.log('PASS: split teleport, two real cube meshes, active marker, control switch, merge and reset match backend states');
 
 scene.dispose();
 }

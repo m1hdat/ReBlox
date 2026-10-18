@@ -74,7 +74,11 @@ function enterRoom() { roomAnimation?.cancel(); if (!settings.reducedMotion && t
 function refresh() {
   document.getElementById("move-count")?.replaceChildren(document.createTextNode(String(session.moves)));
   document.getElementById("lab-moves")?.replaceChildren(document.createTextNode(`${session.moves} nước`));
-  screen.querySelectorAll<HTMLButtonElement>("#dpad button").forEach((button) => button.disabled = session.locked || session.finished);
+  screen.querySelectorAll<HTMLButtonElement>("button[data-a]").forEach((button) => button.disabled = session.locked || session.finished);
+  const switchCube = document.getElementById("switch-cube");
+  if (switchCube) switchCube.hidden = !session.state?.split;
+  const splitStatus = document.getElementById("split-status");
+  if (splitStatus) splitStatus.textContent = session.state?.split ? `Đang điều khiển khối ${session.state.split.active + 1} · Space để đổi` : "";
   screen.querySelectorAll<HTMLButtonElement>('[data-action="restart"], [data-action="pause"]').forEach((button) => button.disabled = working());
   const select = document.getElementById("lab-level") as HTMLSelectElement | null; if (select) select.disabled = working();
   solver?.setBusy(!session.active || working()); screen.setAttribute("aria-busy", String(working()));
@@ -200,7 +204,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") { event.preventDefault(); if (modalKind) closeModal(); else if (view === "play") openModal("pause"); }
   if (event.key === "Tab" && modalKind) { const focusable = [...modal.querySelectorAll<HTMLElement>("button:not(:disabled), input, select")], first = focusable[0], last = focusable[focusable.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); } }
 });
-bindKeyboard((direction) => { if (view === "play" && !modalKind) void session.move(direction); });
+bindKeyboard((direction) => { if ((view === "play" || view === "lab") && !modalKind && !solving) void session.move(direction); });
 const localPointer = (event: MouseEvent) => { const rectangle = canvas.getBoundingClientRect(); return { x: event.clientX - rectangle.left, y: event.clientY - rectangle.top }; };
 canvas.addEventListener("pointerdown", (event) => { if (!["maps", "play", "complete", "lab"].includes(view) || modalKind || working() || event.button !== 0) return; drag = { x: event.clientX, y: event.clientY, originX: event.clientX, originY: event.clientY, moved: false, id: event.pointerId }; canvas.setPointerCapture(event.pointerId); });
 canvas.addEventListener("pointermove", (event) => {

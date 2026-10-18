@@ -26,6 +26,8 @@ def cell_supported(board: Board, r: int, c: int, open_bridges: frozenset[str]) -
 
 def is_valid(board: Board, state: GameState) -> bool:
     """Mọi ô chiếm giữ phải có sàn; đứng thẳng trên ô FRAGILE là không hợp lệ (vỡ)."""
+    if state.split is not None:
+        return all(cell_supported(board, r, c, state.open_bridges) for r, c in state.split.cubes)
     b = state.block
     cells = get_occupied_cells(b)
     for (r, c) in cells:
@@ -38,18 +40,22 @@ def is_valid(board: Board, state: GameState) -> bool:
 
 def is_goal(board: Board, state: GameState) -> bool:
     b = state.block
-    return b.orientation is Orientation.STANDING and (b.row, b.col) == board.goal
+    return state.split is None and b.orientation is Orientation.STANDING and (b.row, b.col) == board.goal
 
 
 def apply_switches(board: Board, block: BlockState, open_bridges: frozenset[str]) -> frozenset[str]:
     """Kích hoạt công tắc dưới khối. soft: bất kỳ ô nào chạm; heavy: chỉ khi STANDING."""
-    cells = get_occupied_cells(block)
+    return apply_cell_switches(board, get_occupied_cells(block), open_bridges, block.orientation is Orientation.STANDING)
+
+
+def apply_cell_switches(board: Board, cells, open_bridges: frozenset[str], standing: bool = False) -> frozenset[str]:
+    """Chỉ những ô vừa được đặt lên mới kích hoạt; cube đơn không có đủ trọng lượng cho heavy."""
     bridges = set(open_bridges)
     for (r, c) in cells:
         sw = board.switch_at(r, c)
         if sw is None:
             continue
-        if sw.kind == "heavy" and block.orientation is not Orientation.STANDING:
+        if sw.kind == "heavy" and not standing:
             continue
         for t in sw.targets:
             if sw.effect == "toggle":
@@ -77,7 +83,7 @@ class CostModel:
             return 1.0
         if self.name == "orientation_weighted":
             # Đang đứng mà lăn tốn 2, còn lại tốn 1 (ví dụ cho thí nghiệm UCS).
-            return 2.0 if before.block.orientation is Orientation.STANDING else 1.0
+            return 2.0 if before.split is None and action is not Action.SWITCH_CUBE and before.block.orientation is Orientation.STANDING else 1.0
         raise ValueError(f"cost model lạ: {self.name}")
 
 

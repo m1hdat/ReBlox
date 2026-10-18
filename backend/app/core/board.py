@@ -18,7 +18,7 @@ class MapError(ValueError):
 
 
 class UnsupportedMechanic(MapError):
-    """Map dùng cơ chế chưa được cài (vd split) -> bị từ chối rõ ràng."""
+    """Map mẫu chưa khai báo đủ dữ liệu để chơi (ví dụ split thiếu destinations)."""
 
 
 @dataclass(frozen=True)
@@ -37,6 +37,12 @@ class Bridge:
     initially_open: bool
 
 
+@dataclass(frozen=True)
+class Splitter:
+    pos: tuple[int, int]
+    destinations: tuple[tuple[int, int], tuple[int, int]]
+
+
 @dataclass
 class Board:
     id: str
@@ -48,6 +54,7 @@ class Board:
     goal: tuple[int, int]
     switches: tuple[Switch, ...] = ()
     bridges: tuple[Bridge, ...] = ()
+    splitters: tuple[Splitter, ...] = ()
     theme: dict = field(default_factory=dict)       # KHÔNG ảnh hưởng solver
     meta: dict = field(default_factory=dict)        # status, solvable, reference_solution...
     _bridge_cells: dict = field(default_factory=dict, repr=False)  # cell -> bridge id
@@ -96,10 +103,12 @@ class Board:
                 Switch(tuple(s["pos"]), s["kind"], tuple(s["targets"]), s.get("effect", "toggle"))
                 for s in d.get("switches", [])
             )
+            splitters = tuple(Splitter(tuple(s["pos"]), tuple(tuple(c) for c in s["destinations"]))
+                              for s in d.get("splitters", []))
             board = Board(
                 id=d["id"], name=d["name"], rows=rows, cols=cols, grid=grid,
                 start=tuple(d["start"]), goal=tuple(d["goal"]),
-                switches=switches, bridges=bridges,
+                switches=switches, bridges=bridges, splitters=splitters,
                 theme=d.get("theme", {}),
                 meta={k: d[k] for k in ("status", "difficulty", "solvable", "reference_solution",
                                         "description", "pending_reason") if k in d},
@@ -141,9 +150,21 @@ class Board:
             for c, ch in enumerate(line):
                 if ch in (SOFT_SWITCH, HEAVY_SWITCH) and self.switch_at(r, c) is None:
                     raise MapError(f"{self.id}: tile công tắc {(r, c)} chưa có định nghĩa")
-        uses_split = any(SPLIT_SWITCH in line for line in self.grid)
-        if uses_split and not allow_pending:
-            raise UnsupportedMechanic(f"{self.id}: dùng split switch — cơ chế split CHƯA được cài (pending)")
+        positions = {s.pos for s in self.splitters}
+        if len(positions) != len(self.splitters):
+            raise MapError(f"{self.id}: công tắc split bị trùng")
+        for s in self.splitters:
+            if len(s.pos) != 2 or self.tile(*s.pos) != SPLIT_SWITCH:
+                raise MapError(f"{self.id}: vị trí splitter phải là ô X")
+            if len(s.destinations) != 2 or len(set(s.destinations)) != 2:
+                raise MapError(f"{self.id}: splitter cần hai đích khác nhau")
+            for cell in s.destinations:
+                if len(cell) != 2 or not self.in_bounds(*cell) or not (self.tile(*cell) in FLOOR_TILES or self.bridge_at(*cell)):
+                    raise MapError(f"{self.id}: đích split không có sàn")
+        missing = {(r, c) for r, line in enumerate(self.grid) for c, ch in enumerate(line)
+                   if ch == SPLIT_SWITCH} - positions
+        if missing and not allow_pending:
+            raise UnsupportedMechanic(f"{self.id}: ô split chưa khai báo hai destinations")
 
     def to_dict(self) -> dict:
         return {
@@ -153,6 +174,8 @@ class Board:
                          for s in self.switches],
             "bridges": [{"id": b.id, "cells": [list(c) for c in b.cells], "initially_open": b.initially_open}
                         for b in self.bridges],
+            "splitters": [{"pos": list(s.pos), "destinations": [list(c) for c in s.destinations]}
+                          for s in self.splitters],
             "theme": self.theme, **self.meta,
         }
 

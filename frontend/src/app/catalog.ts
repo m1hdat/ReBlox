@@ -2,10 +2,10 @@
 export type ToyId = "robot" | "music-box" | "train" | "clock";
 export interface Toy { id: ToyId; name: string; nickname: string; story: string; color: string; maps: string[]; part: string; customer: string; request: string; }
 export const TOYS: Toy[] = [
-  { id: "robot", name: "Robot Bíp", nickname: "Robot nhỏ", story: "Kiểm tra viên pin và nối lại mạch khởi động cho Bíp.", color: "teal", maps: ["easy_01", "bridge_01"], part: "Viên pin & mạch khởi động", customer: "An", request: "Bíp không bật lên nữa. Bạn kiểm tra giúp mình nhé." },
-  { id: "music-box", name: "Hộp nhạc", nickname: "Hộp nhạc lên dây cót", story: "Lắp lại chốt để dây cót truyền lực đến hộp nhạc.", color: "coral", maps: ["easy_02"], part: "Chốt lên dây cót", customer: "Mai", request: "Vặn dây cót rồi mà vẫn không nghe tiếng." },
-  { id: "train", name: "Tàu gỗ", nickname: "Đầu tàu gỗ", story: "Kiểm tra khớp truyền động để bánh xe quay trở lại.", color: "blue", maps: ["medium_01"], part: "Khớp truyền động", customer: "Nam", request: "Một bánh xe bị kẹt." },
-  { id: "clock", name: "Đồng hồ", nickname: "Đồng hồ để bàn", story: "Lắp lại bánh răng nhịp. Chú ý các phiến mỏng khi đưa linh kiện qua.", color: "yellow", maps: ["fragile_01"], part: "Bánh răng nhịp", customer: "Cô Tâm", request: "Đồng hồ cứ chạy được một lúc rồi dừng." },
+  { id: "robot", name: "Robot Bíp", nickname: "Robot nhỏ", story: "Kiểm tra viên pin và nối lại mạch khởi động cho Bíp.", color: "teal", maps: ["easy_01", "bridge_01", "heavy_01", "split_01"], part: "Viên pin & mạch khởi động", customer: "An", request: "Bíp không bật lên nữa. Bạn kiểm tra giúp mình nhé." },
+  { id: "music-box", name: "Hộp nhạc", nickname: "Hộp nhạc lên dây cót", story: "Lắp lại chốt để dây cót truyền lực đến hộp nhạc.", color: "coral", maps: ["easy_02", "permanent_01"], part: "Chốt lên dây cót", customer: "Mai", request: "Vặn dây cót rồi mà vẫn không nghe tiếng." },
+  { id: "train", name: "Tàu gỗ", nickname: "Đầu tàu gỗ", story: "Kiểm tra khớp truyền động để bánh xe quay trở lại.", color: "blue", maps: ["medium_01", "toggle_01"], part: "Khớp truyền động", customer: "Nam", request: "Một bánh xe bị kẹt." },
+  { id: "clock", name: "Đồng hồ", nickname: "Đồng hồ để bàn", story: "Lắp lại bánh răng nhịp. Chú ý các phiến mỏng khi đưa linh kiện qua.", color: "yellow", maps: ["fragile_01", "advanced_01"], part: "Bánh răng nhịp", customer: "Cô Tâm", request: "Đồng hồ cứ chạy được một lúc rồi dừng." },
 ];
 export const toyById = (id: string) => TOYS.find((toy) => toy.id === id) ?? TOYS[0];
 export const toyForMap = (id: string) => TOYS.find((toy) => toy.maps.includes(id)) ?? TOYS[0];

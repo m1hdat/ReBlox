@@ -2,11 +2,26 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { COLORS } from "./tiles";
 
-export interface RenderBlock { row: number; col: number; orientation: string; }
+export interface RenderBlock { row: number; col: number; orientation: string; split?: { cubes: [[number, number], [number, number]]; active: number }; }
 export function occupiedCells(s: RenderBlock): [number, number][] {
+  if (s.split) return s.split.cubes;
   if (s.orientation === "STANDING") return [[s.row, s.col]];
   if (s.orientation === "HORIZONTAL") return [[s.row, s.col], [s.row, s.col + 1]];
   return [[s.row, s.col], [s.row + 1, s.col]];
+}
+
+/** Cube LEGO thật, đủ chiều cao một ô; vòng chân chỉ khối đang điều khiển. */
+export function createUnitCube() {
+  const group = new THREE.Group();
+  const material = new THREE.MeshStandardMaterial({ color: COLORS.peach, roughness: .48 });
+  const body = new THREE.Mesh(new RoundedBoxGeometry(.94, .94, .94, 3, .055), material);
+  body.castShadow = true; body.receiveShadow = true; group.add(body);
+  const stud = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .045, 16), new THREE.MeshStandardMaterial({ color: COLORS.yellow, roughness: .35 }));
+  stud.position.y = .49; group.add(stud);
+  const active = new THREE.Mesh(new THREE.TorusGeometry(.59, .035, 6, 32), new THREE.MeshBasicMaterial({ color: 0x1a797b }));
+  active.name = "active-cube"; active.rotation.x = -Math.PI / 2; active.position.y = -.47; group.add(active);
+  group.visible = false;
+  return group;
 }
 export interface Box3D { cx: number; cz: number; w: number; d: number; h: number; minX: number; maxX: number; minZ: number; maxZ: number; }
 export function blockBox(s: RenderBlock): Box3D {

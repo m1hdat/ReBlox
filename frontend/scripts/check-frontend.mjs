@@ -29,10 +29,10 @@ const closeHelp = async () => { if ($(".help-paper")) await click('.help-paper [
 const select = async (id) => click(`[data-action=select-map][data-id="${id}"]`);
 async function play(id) { await select(id); await click('[data-action=play-map]'); await closeHelp(); assert.equal(document.body.dataset.screen, "play"); }
 async function backToMaps() { key("Escape"); await click('#modal [data-action=maps]'); assert.equal(document.body.dataset.screen, "maps"); }
-async function solve(id) { const keys = { UP: "ArrowUp", DOWN: "ArrowDown", LEFT: "ArrowLeft", RIGHT: "ArrowRight" }; for (const action of boards.get(id).reference_solution) await move(keys[action]); assert.equal(document.body.dataset.screen, "complete"); }
+async function solve(id) { const keys = { UP: "ArrowUp", DOWN: "ArrowDown", LEFT: "ArrowLeft", RIGHT: "ArrowRight", SWITCH_CUBE: " " }; for (const action of boards.get(id).reference_solution) await move(keys[action]); assert.equal(document.body.dataset.screen, "complete"); }
 
 
-const groups = {robot: ["easy_01", "bridge_01"], "music-box": ["easy_02"], train: ["medium_01"], clock: ["fragile_01"]};
+const groups = {robot: ["easy_01", "bridge_01", "heavy_01", "split_01"], "music-box": ["easy_02", "permanent_01"], train: ["medium_01", "toggle_01"], clock: ["fragile_01", "advanced_01"]};
 async function openGroup(id) {
   if (document.body.dataset.screen === "maps") await click('[data-action=components]');
   assert.equal(document.body.dataset.screen, "components");
@@ -58,37 +58,39 @@ console.log('PASS: four original groups and exact map memberships; no automatic 
 await openGroup('robot'); await play('easy_01'); await solve('easy_01');
 assert($('[data-action=next]')); await click('[data-action=next]'); await closeHelp();
 assert.equal(exports.readSave().lastMapId, 'bridge_01'); await solve('bridge_01');
+for (const id of ['heavy_01','split_01']) { await click('[data-action=next]'); await closeHelp(); await solve(id); }
 assert.equal($('.result-panel .primary').dataset.action, 'components');
 await click('.result-panel .primary');
-assert.match($('[data-id="robot"] .component-progress').textContent, /2\/2/);
-await openGroup('robot'); assert.equal($('.map-option[aria-pressed=true]').dataset.id, 'bridge_01');
-await click('[data-action=play-map]'); await closeHelp(); await solve('bridge_01');
+assert.match($('[data-id="robot"] .component-progress').textContent, /4\/4/);
+await openGroup('robot'); assert.equal($('.map-option[aria-pressed=true]').dataset.id, 'split_01');
+await select('bridge_01'); await click('[data-action=play-map]'); await closeHelp(); await solve('bridge_01');
 await click('[data-action=maps]'); assert.equal($('.map-option[aria-pressed=true]').dataset.id, 'bridge_01');
 console.log('PASS: next stays in robot group; final map returns to menu; result/back preserves selection and real progress');
 for (const [id, mapId] of [['music-box','easy_02'],['train','medium_01'],['clock','fragile_01']]) {
   await openGroup(id); await play(mapId); await solve(mapId);
+  await click('[data-action=next]'); await closeHelp(); await solve(groups[id][1]);
   assert.equal($('.result-panel .primary').dataset.action, 'components'); await click('.result-panel .primary');
-  assert.match($(`[data-id="${id}"] .component-progress`).textContent, /1\/1/);
+  assert.match($(`[data-id="${id}"] .component-progress`).textContent, /2\/2/);
 }
 await openGroup('train'); await play('medium_01'); await move('ArrowDown');
 key('Escape'); const count=traffic.length; key('ArrowRight'); assert.equal(traffic.length,count);
 await click('#modal [data-action=help]'); await click('.help-paper [data-action=close-modal]'); assert($('.pause-paper'));
 await click('#modal [data-action=settings]'); await click('#modal [data-action=close-modal]'); assert($('.pause-paper'));
 await click('#modal [data-action=maps]'); assert.equal($('.map-option[aria-pressed=true]').dataset.id,'medium_01');
-assert.equal(document.querySelectorAll('.map-option').length,1);
+assert.equal(document.querySelectorAll('.map-option').length,2);
 await click('[data-action=continue]'); await closeHelp(); assert.equal($('#move-count').textContent,'1');
 await click('[data-action=restart]'); assert.equal($('#move-count').textContent,'0'); assert.equal($('.help-paper'),null);
 await click('[data-action=hint]'); assert(!$('#game-hint').classList.contains('hidden')); await click('[data-action=close-hint]');
 await backToMaps(); await click('[data-action=components]'); await openGroup('robot');
 assert.equal($('.map-option[aria-pressed=true]').dataset.id,'bridge_01');
-console.log('PASS: one-map groups return to menu; per-group selection, resume, pause/help/settings and hints preserved');
+console.log('PASS: expanded groups return to menu after the final map; per-group selection, resume, pause/help/settings and hints preserved');
 const beforeLab=JSON.stringify(exports.readSave()); await click('[data-action=lab]');
 assert.equal(document.querySelectorAll('#lab-level option').length,maps.length);
 for(const algo of ['BFS','DFS','UCS','ASTAR']) { await click(`[data-algo=${algo}]`); assert.match($('#solver-status').textContent,/ch\u01b0a/); }
 await click('#btn-mock'); assert.match($('#solver-status').textContent,/MOCK/); assert.equal(JSON.stringify(exports.readSave()),beforeLab);
 assert($('#lab-level option[value="split_pending_01"]').disabled);
 await click('[data-action=maps]'); assert.deepEqual([...document.querySelectorAll('.map-option')].map(el=>el.dataset.id),groups.robot);
-console.log('PASS: Lab retains all seven maps without assigning experimental maps to a component or changing progress');
+console.log('PASS: Lab retains all twelve maps without assigning experimental maps to a component or changing progress');
 const geometry=new exports.WorkshopScene($('#stage'));
 for(const map of boards.values()) {
   geometry.previewMap(map); geometry.resetMapCamera();

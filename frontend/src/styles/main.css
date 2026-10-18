@@ -290,3 +290,8 @@ input[type=range] { width: 100%; margin: 14px 0; accent-color: var(--petrol); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 body[data-reduced-motion=true] *, body[data-reduced-motion=true] *::before, body[data-reduced-motion=true] *::after { animation: none !important; transition: none !important; }
+
+#switch-cube[hidden] { display: none !important; }
+.split-status { font-size: 13px; color: var(--petrol); max-width: 240px; }
+.split-status:empty { display: none; }
+@media (max-width: 900px) { .split-status { display: none; } #switch-cube { padding: 9px 12px; flex-shrink: 0; } }

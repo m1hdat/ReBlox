@@ -1,0 +1,95 @@
+{
+  "id": "advanced_01",
+  "name": "Mạch cầu và phiến mỏng",
+  "difficulty": "advanced",
+  "status": "playable",
+  "description": "Nút tròn đảo cầu đầu, nút chịu lực mở cầu sau. Nằm xuống khi qua phiến mỏng.",
+  "grid": [
+    "#s#h....####",
+    "####..FF###G",
+    "####..FF####"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    1,
+    11
+  ],
+  "switches": [
+    {
+      "pos": [
+        0,
+        1
+      ],
+      "kind": "soft",
+      "targets": [
+        "first"
+      ],
+      "effect": "toggle"
+    },
+    {
+      "pos": [
+        0,
+        3
+      ],
+      "kind": "heavy",
+      "targets": [
+        "second"
+      ],
+      "effect": "open"
+    }
+  ],
+  "bridges": [
+    {
+      "id": "first",
+      "cells": [
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "initially_open": false
+    },
+    {
+      "id": "second",
+      "cells": [
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ]
+      ],
+      "initially_open": false
+    }
+  ],
+  "theme": {
+    "object": "toy_lamp",
+    "palette": "yellow"
+  },
+  "rows": 3,
+  "cols": 12,
+  "solvable": true,
+  "reference_solution": [
+    "RIGHT",
+    "RIGHT",
+    "DOWN",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "UP",
+    "RIGHT",
+    "DOWN",
+    "RIGHT"
+  ]
+}

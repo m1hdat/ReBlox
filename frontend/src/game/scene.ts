@@ -10,7 +10,7 @@ import { Storefront } from "../objects/storefront";
 import { createReceivingCounter, createRepairedDisplay } from "../objects/interior";
 import { ToyModel } from "../objects/toys";
 import { TOYS, toyForMap, type ToyId } from "../app/catalog";
-import { Player, blockBox, occupiedCells, type RenderBlock } from "../objects/player";
+import { Player, createUnitCube, blockBox, occupiedCells, type RenderBlock } from "../objects/player";
 import { disposeTree } from "../objects/resources";
 import {
   COLORS, matte, createBridge, createFloorTile, createFragileTile, createGoalSocket,
@@ -34,6 +34,8 @@ export class WorkshopScene {
   private boardRoot = new THREE.Group();
   private environment = new THREE.Group();
   private player = new Player();
+  private cubes = [createUnitCube(), createUnitCube()];
+  private renderState: RenderBlock | null = null;
   private toy: ToyModel | null = null;
   private cable: THREE.Mesh<THREE.TubeGeometry, THREE.MeshStandardMaterial> | null = null;
   private models: ToyModel[] = [];
@@ -87,6 +89,7 @@ export class WorkshopScene {
     sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.025; sun.shadow.radius = 3;
     this.scene.add(sun, this.environment, this.boardRoot);
     this.boardRoot.add(this.player.group);
+    this.boardRoot.add(...this.cubes);
     // Canvas đổi kích thước theo CSS grid, không chỉ khi window phát resize.
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(canvas);
@@ -155,7 +158,7 @@ export class WorkshopScene {
 
   private clearWorld(preserveWorkshop = false) {
     for (const child of [...this.boardRoot.children]) {
-      if (child === this.player.group) continue;
+      if (child === this.player.group || this.cubes.includes(child as THREE.Group)) continue;
       this.boardRoot.remove(child); disposeTree(child);
     }
     if (preserveWorkshop) {
@@ -177,6 +180,7 @@ export class WorkshopScene {
     }
     if (this.renderer.shadowMap) { this.renderer.shadowMap.autoUpdate = !preserveWorkshop; this.renderer.shadowMap.needsUpdate = true; }
     this.counterSelected = false; this.selectionRing = null; this.counterHover = null; this.player.group.visible = false;
+    this.cubes.forEach(cube => { cube.visible = false; }); this.renderState = null;
   }
 
   showStorefront() {
@@ -308,7 +312,7 @@ export class WorkshopScene {
     this.raycaster.setFromCamera(new THREE.Vector2(x / this.canvas.clientWidth * 2 - 1, 1 - y / this.canvas.clientHeight * 2), this.camera);
     const point = this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3()); if (!point) return null;
     const map = this.currentMap, row = Math.round(point.z + (map.rows - 1) / 2), col = Math.round(point.x + (map.cols - 1) / 2);
-    const labels: Record<string, string> = { F: "Ô dễ vỡ: chỉ chịu được khối nằm.", G: "Ô đích: đưa khối đứng thẳng vào đây.", s: "Công tắc mềm: chạm bằng khối nằm hoặc đứng.", h: "Công tắc nặng: cần khối đứng.", X: "Máy tách: cơ chế chưa được backend hỗ trợ." };
+    const labels: Record<string, string> = { F: "Ô dễ vỡ: khối nằm hoặc cube đơn có thể đi qua.", G: "Ô đích: đưa khối đứng thẳng vào đây.", s: "Công tắc mềm: cả cube đơn cũng kích hoạt được.", h: "Công tắc nặng: chỉ khối nguyên đứng thẳng mới kích hoạt.", X: map.splitters?.length ? "Ô tách ( ): đứng lên để dịch chuyển thành hai cube. Space để đổi khối." : "Ô tách chưa được khai báo đích dịch chuyển." };
     const bridge = map.bridges.find((bridge) => bridge.cells.some(([r, c]) => r === row && c === col));
     if (bridge) return this.bridges.get(bridge.id)?.planks.some((plank) => plank.visible) ? "Cầu đang mở: có thể đi qua." : "Cầu đang đóng: kích hoạt công tắc để mở.";
     return labels[map.grid[row]?.[col]] ?? null;
@@ -419,10 +423,42 @@ export class WorkshopScene {
     return Promise.all(jobs).then(() => undefined);
   }
 
-  setBlock(state: GameState) { this.player.setBlock(state); }
+  setBlock(state: RenderBlock | GameState) {
+    this.renderState = state;
+    this.cubes.forEach((cube, i) => {
+      cube.visible = !!state.split;
+      cube.scale.setScalar(1);
+      if (state.split) {
+        const [r, c] = state.split.cubes[i]; cube.position.set(c, .5, r);
+        cube.getObjectByName("active-cube")!.visible = i === state.split.active;
+      }
+    });
+    if (state.split) this.player.group.visible = false;
+    else this.player.setBlock(state);
+  }
 
   /** Pivot ở cạnh đáy. attach giữ quaternion thật, không dựng lại mesh khi đáp. */
   async roll(from: RenderBlock, action: ActionName, to: RenderBlock) {
+    if (from.split || to.split || action === "SWITCH_CUBE") {
+      this.setBlock(from);
+      if (from.split && to.split) {
+        const starts = this.cubes.map(cube => cube.position.clone());
+        const remaining = to.split.cubes.map(([r, c]) => new THREE.Vector3(c, .5, r));
+        const destinations = starts.map(start => remaining.find(v => v.equals(start)) ?? null);
+        const available = remaining.filter(v => !destinations.includes(v));
+        destinations.forEach((v, i) => { if (!v) destinations[i] = available.shift()!; });
+        await tween(200, t => this.cubes.forEach((cube, i) => cube.position.lerpVectors(starts[i], destinations[i]!, t)));
+      } else if (to.split) {
+        await tween(120, t => this.player.group.scale.setScalar(1 - .65 * t));
+        this.setBlock(to);
+        await tween(170, t => this.cubes.forEach(cube => cube.scale.setScalar(.35 + .65 * t)));
+      } else {
+        const starts = this.cubes.map(cube => cube.position.clone()), box = blockBox(to);
+        const center = new THREE.Vector3(box.cx, .5, box.cz);
+        await tween(180, t => this.cubes.forEach((cube, i) => cube.position.lerpVectors(starts[i], center, t)));
+      }
+      this.setBlock(to); return;
+    }
     const b = blockBox(from);
     const axis = action === "LEFT" || action === "RIGHT" ? "z" : "x";
     const angle = action === "RIGHT" || action === "UP" ? -Math.PI / 2 : Math.PI / 2;
@@ -440,6 +476,7 @@ export class WorkshopScene {
     const y = group.position.y;
     await tween(50, (t) => { group.position.y = y - 0.014 * Math.sin(t * Math.PI); }, ease.linear);
     group.position.y = y;
+    this.renderState = to;
   }
 
   /** Chỉ gọi sau khi backend từ chối nước đi; nhận attempted để chọn hiệu ứng vỡ. */
@@ -454,13 +491,13 @@ export class WorkshopScene {
       });
       if (t > 0.65) broken.group.visible = false;
     }) : Promise.resolve();
-    const group = this.player.group, y = group.position.y;
+    const group = this.renderState?.split ? this.cubes[this.renderState.split.active] : this.player.group, y = group.position.y;
     this.player.setSocketClipping(true);
     await Promise.all([fracture, tween(420, (t) => { group.position.y = y - 3 * t; }, ease.in)]);
   }
 
   resetPlayer(start: GameState) {
-    this.player.setBlock(start); this.setGoalGlow(0.06); this.toy?.setRepaired(false);
+    this.setBlock(start); this.setGoalGlow(0.06); this.toy?.setRepaired(false);
     if (this.cable) this.cable.material.emissiveIntensity = 0;
     this.fragile.forEach(({ group, shards }) => {
       group.visible = true;
@@ -480,7 +517,7 @@ export class WorkshopScene {
     const jobs: Promise<void>[] = [];
     for (const [r, c] of occupiedCells(state)) {
       const button = this.buttons.get(`${r},${c}`);
-      if (!button || (button.kind === "heavy" && state.orientation !== "STANDING")) continue;
+      if (!button || (button.kind === "heavy" && (state.split || state.orientation !== "STANDING"))) continue;
       jobs.push(tween(180, (t) => {
         button.cap.position.y = button.restY - 0.035 * Math.sin(t * Math.PI);
       }, ease.linear).then(() => { button.cap.position.y = button.restY; }));

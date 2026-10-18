@@ -1,6 +1,6 @@
 ﻿import type { ActionName } from "../api/client";
 const KEY = "little-repair-shop.save.v1";
-const DIRECTIONS = new Set(["UP", "DOWN", "LEFT", "RIGHT"]);
+const DIRECTIONS = new Set(["UP", "DOWN", "LEFT", "RIGHT", "SWITCH_CUBE"]);
 export interface Checkpoint { mapId: string; path: ActionName[]; }
 export interface SaveData { version: 1; completed: Record<string, { bestMoves: number; completedAt: string }>; checkpoint: Checkpoint | null; lastMapId: string | null; lastGroupId: string | null; lastMapByGroup: Record<string, string>; seenOrbit: boolean; playedMapIds: string[]; seenHelp: string[]; settings: { reducedMotion: boolean; speed: number; showHelp: boolean }; }
 export const freshSave = (): SaveData => ({ version: 1, completed: {}, checkpoint: null, lastMapId: null, lastGroupId: null, lastMapByGroup: {}, seenOrbit: false, playedMapIds: [], seenHelp: [],

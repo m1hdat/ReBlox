@@ -39,7 +39,7 @@ export class GameSession {
     this.busy = true; this.changed();
     try {
       const result = await api.step(this.map.id, this.state, action);
-      if (result.reason === "unsupported_action" || result.reason === "already_goal") return false;
+      if (result.reason === "unsupported_action" || result.reason === "already_goal" || result.reason === "occupied_cube") return false;
       if (!result.valid) {
         if (result.attempted) await this.scene.roll(this.state, action, result.attempted);
         await this.scene.fall(result.attempted);

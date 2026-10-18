@@ -1,0 +1,91 @@
+{
+  "id": "split_01",
+  "name": "Hai nửa mạch điện",
+  "difficulty": "advanced",
+  "status": "playable",
+  "description": "Đứng lên ô ( ) để tách khối. Nhấn Space hoặc Đổi khối; mở cầu bằng cube rồi đưa hai cube kề nhau để gộp.",
+  "grid": [
+    "###X......####",
+    "####...#..####",
+    "..........###G",
+    "..........#s##",
+    "..........####"
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    2,
+    13
+  ],
+  "splitters": [
+    {
+      "pos": [
+        0,
+        3
+      ],
+      "destinations": [
+        [
+          1,
+          7
+        ],
+        [
+          3,
+          10
+        ]
+      ]
+    }
+  ],
+  "switches": [
+    {
+      "pos": [
+        3,
+        11
+      ],
+      "kind": "soft",
+      "targets": [
+        "cube_bridge"
+      ],
+      "effect": "open"
+    }
+  ],
+  "bridges": [
+    {
+      "id": "cube_bridge",
+      "cells": [
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          9
+        ]
+      ],
+      "initially_open": false
+    }
+  ],
+  "theme": {
+    "object": "splitter_machine",
+    "palette": "lavender"
+  },
+  "rows": 5,
+  "cols": 14,
+  "solvable": true,
+  "reference_solution": [
+    "RIGHT",
+    "RIGHT",
+    "SWITCH_CUBE",
+    "RIGHT",
+    "UP",
+    "RIGHT",
+    "SWITCH_CUBE",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "DOWN",
+    "RIGHT",
+    "RIGHT"
+  ]
+}

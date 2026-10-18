@@ -1,0 +1,85 @@
+{
+  "id": "toggle_01",
+  "name": "Cầu đảo trạng thái",
+  "description": "Nút tròn đảo trạng thái cầu mỗi lần chạm. Đừng vô tình đóng lại đường đi.",
+  "difficulty": "advanced",
+  "status": "playable",
+  "rows": 4,
+  "cols": 11,
+  "grid": [
+    "####.......",
+    "####.......",
+    "#s##......G",
+    "####......."
+  ],
+  "start": [
+    0,
+    0
+  ],
+  "goal": [
+    2,
+    10
+  ],
+  "switches": [
+    {
+      "pos": [
+        2,
+        1
+      ],
+      "kind": "soft",
+      "targets": [
+        "bridge_a"
+      ],
+      "effect": "toggle"
+    }
+  ],
+  "bridges": [
+    {
+      "id": "bridge_a",
+      "cells": [
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          2,
+          9
+        ]
+      ],
+      "initially_open": false
+    }
+  ],
+  "theme": {
+    "object": "toy_lamp",
+    "palette": "yellow"
+  },
+  "solvable": true,
+  "reference_solution": [
+    "DOWN",
+    "RIGHT",
+    "DOWN",
+    "RIGHT",
+    "UP",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "RIGHT"
+  ]
+}
