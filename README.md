@@ -1,110 +1,178 @@
-# 🔧 Little Repair Shop
+# Little Repair Shop · ReBlox
 
-*Every Piece Has Its Place*
+**Every Piece Has Its Place**
 
-Game **Bloxorz** chạy trên trình duyệt (đồ họa 3D) kèm bộ giải bằng các thuật toán tìm kiếm **BFS, DFS, UCS, A\***, làm cho đồ án môn **Nhập môn Trí tuệ nhân tạo** (HCMUS).
+Trò chơi giải đố lấy cảm hứng từ **Bloxorz**, kết hợp giao diện 3D trên trình duyệt với môi trường thực nghiệm các thuật toán tìm kiếm **BFS, DFS, UCS và A\***. Dự án phục vụ đồ án môn **Nhập môn Trí tuệ nhân tạo — HCMUS**.
 
-Bạn là một linh kiện nhỏ (viên pin pastel 1×1×2) trong tiệm sửa đồ chơi. Lăn linh kiện qua bàn làm việc và đặt nó **đứng thẳng** vào ổ cắm còn thiếu để món đồ (robot, hộp nhạc, đồng hồ...) sống lại.
+Trong một tiệm sửa đồ chơi, bạn lăn linh kiện 1×1×2 qua bàn lắp ráp và đưa nó **đứng thẳng tại ô đích** để hoàn thành việc sửa chữa. Cùng một bộ luật được dùng cho chơi tay, tìm kiếm và kiểm chứng lời giải.
 
-## Trạng thái
+[Cài đặt](#cài-đặt-và-chạy) · [Cách chơi](#cách-chơi) · [Hướng dẫn solver](SOLVER_GUIDE.md) · [Kiểm tra](#kiểm-tra) · [Kiến trúc](#kiến-trúc)
 
-| Hạng mục | Trạng thái |
+## Dự án hiện có gì?
+
+| Hạng mục | Trạng thái trong mã nguồn |
 |---|---|
-| Khối 1×1×2, 12 phép lăn | ✅ Hoàn thành, có test |
-| Ô dễ vỡ (fragile) | ✅ |
-| Cầu + công tắc soft/heavy (toggle / open / close) | ✅ |
-| Công tắc split, tách / đổi / gộp khối | ⏳ Chưa cài (map dùng split bị backend từ chối rõ ràng) |
-| BFS / DFS / UCS / A\* | ⏳ Đang cài, xem [SOLVER_GUIDE.md](SOLVER_GUIDE.md) |
-| Web 3D chơi tay, replay lời giải, bảng solver | ✅ |
+| Khối 1×1×2 và chuyển động theo ba tư thế | Đã triển khai, có kiểm thử backend |
+| Ô dễ vỡ, cầu, công tắc soft/heavy, hiệu ứng toggle/open/close | Đã triển khai trong lõi game |
+| Giao diện Three.js, chọn nhiệm vụ, xem trước bản đồ, chơi tay và màn kết quả | Đã triển khai |
+| Tiến độ và kỷ lục chơi tay | Lưu trong `localStorage` của trình duyệt |
+| Sổ kỹ thuật: gọi solver, chọn cost model, hiển thị metric và replay | Đã có luồng tích hợp |
+| BFS / DFS / UCS / A\* | **Cả bốn còn là placeholder** trong `backend/app/solvers/` |
+| Split switch, tách/đổi/gộp hai khối nhỏ | Chưa hỗ trợ; bản đồ thử nghiệm được đánh dấu `pending` |
 
-## Công nghệ
+> Có nút thuật toán trên giao diện chưa có nghĩa thuật toán đã được cài đặt. Solver còn thiếu trả `not_implemented`. Chức năng **MOCK** chỉ phát lời giải tham chiếu có sẵn trong map, không tạo số liệu thuật toán.
 
-- **Backend:** Python 3.11+, FastAPI, Pydantic, Pytest
-- **Frontend:** TypeScript, Vite, Three.js (camera trực giao)
-- Hai bên giao tiếp qua REST/JSON
+## Cài đặt và chạy
 
-## Cài đặt (Windows + PowerShell)
+### Yêu cầu
 
-Cần: Python 3.11+, Node.js 18+ (khuyến nghị 20+), Git.
+- Python **3.11+** và Node.js **20+** được khuyến nghị cho môi trường phát triển.
+- Git, npm và trình duyệt hỗ trợ WebGL.
+- Các lệnh dưới đây dành cho **Windows PowerShell**. Chạy backend và frontend trong hai terminal riêng.
+
+### 1. Lấy mã nguồn
 
 ```powershell
 git clone https://github.com/m1hdat/ReBlox.git
 cd ReBlox
-
-# --- Backend ---
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1          # nếu bị chặn: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-pip install -r requirements.txt
-python -m pytest -q                   # chạy test
-uvicorn app.main:app --reload --port 8000
-
-# --- Frontend (mở terminal MỚI, từ thư mục ReBlox) ---
-cd frontend
-npm install
-npm run dev                           # mở http://localhost:5173
-npm run build                         # kiểm tra build production
 ```
 
-Kiểm tra bản đồ và chạy test cùng lúc (từ thư mục gốc, đã bật venv):
+Nếu đã có checkout, bắt đầu từ thư mục gốc `ReBlox`.
+
+### 2. Khởi động backend — terminal thứ nhất
 
 ```powershell
-python scripts\run_tests.py
+python -m venv backend/.venv
+./backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
+cd backend
+./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000
 ```
+
+API chạy tại <http://127.0.0.1:8000>; tài liệu API tương tác tại <http://127.0.0.1:8000/docs>. Các lệnh dùng trực tiếp Python trong môi trường ảo nên không cần kích hoạt `Activate.ps1` hay thay đổi execution policy.
+
+### 3. Khởi động frontend — terminal thứ hai
+
+Từ thư mục gốc `ReBlox`:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Mở <http://localhost:5173>. Vite chuyển tiếp `/api` đến backend tại `127.0.0.1:8000` theo [vite.config.ts](frontend/vite.config.ts).
+
+### 4. Kiểm tra kết nối
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/health
+```
+
+Phản hồi mong đợi là `ok: True`. Nếu giao diện không tải được map, kiểm tra backend và cấu hình proxy trước.
 
 ## Cách chơi
 
-Luồng chính: **Trang chủ → Menu linh kiện → Các map của linh kiện → Chơi → Kết quả**.
+**Trang chủ → Chọn linh kiện → Chọn bản đồ → Chơi → Kết quả.**
 
-- Điều khiển: phím ←↑↓→, WASD hoặc D-pad cảm ứng. Mục tiêu: đưa khối **đứng thẳng** vào ô đích vàng.
-- Các nhóm linh kiện: Robot Bíp (`easy_01`, `bridge_01`), Hộp nhạc (`easy_02`), Tàu gỗ (`medium_01`), Đồng hồ (`fragile_01`). Mỗi nhóm có tiến độ và kỷ lục riêng, lưu trong `localStorage`.
-- Ở màn chọn map có thể xoay / zoom / nhìn từ trên xuống / đặt lại góc nhìn trên bàn lắp ráp LEGO 3D trước khi chơi.
-- Kết quả có **Chơi lại**, **Map tiếp theo** (trong cùng nhóm) và **Chọn map**.
-- **Sổ kỹ thuật** (Workshop Lab) chứa toàn bộ 7 map, các thuật toán, cost model, số liệu và replay lời giải.
+- Di chuyển bằng phím mũi tên, **WASD** hoặc D-pad trên màn hình.
+- Đưa khối **đứng thẳng trên ô `G`**. Nằm ngang hoặc nằm dọc qua ô đích chưa hoàn thành màn chơi.
+- Không để bất kỳ phần nào của khối ra ngoài sàn. Ô `F` chịu được khối nằm nhưng vỡ khi khối đứng.
+- Công tắc có thể thay đổi cầu; cần tính cả tư thế khối và trạng thái cầu khi tìm đường.
+- Màn chọn bản đồ hỗ trợ xoay, zoom, nhìn từ trên xuống và đặt lại camera trước khi chơi.
+- Tiến độ thuộc về trình duyệt đang dùng; xóa dữ liệu trang sẽ xóa tiến độ cục bộ.
 
-Muốn thêm map: đặt file JSON mới vào `maps/` rồi kiểm tra bằng `python scripts\validate_maps.py`. Nhóm hiển thị ở menu chính được khai báo trong `frontend/src/app/catalog.ts`.
+Các nhiệm vụ chính được nhóm theo đồ chơi trong [catalog.ts](frontend/src/app/catalog.ts):
+
+| Nhóm | Bản đồ |
+|---|---|
+| Robot Bíp | `easy_01`, `bridge_01` |
+| Hộp nhạc | `easy_02` |
+| Tàu gỗ | `medium_01` |
+| Đồng hồ | `fragile_01` |
+
+**Sổ kỹ thuật** cung cấp danh sách đầy đủ 7 map, trong đó `unsolvable_01` dùng để thử trường hợp vô nghiệm và `split_pending_01` bị vô hiệu hóa vì chưa hỗ trợ split. Replay trong Sổ kỹ thuật không cộng tiến độ hoặc kỷ lục chơi tay; giao diện hiện chưa hiển thị trace mở rộng từng node.
 
 ## Kiến trúc
 
 ```text
-Frontend TypeScript + Three.js ── REST/JSON ──> FastAPI
-  màn game + GameSession                        core / solvers / benchmark
-  lưu tiến độ localStorage                      maps/*.json
+Trình duyệt · TypeScript / Three.js
+  Màn hình, camera, animation, GameSession, localStorage
+                         │ REST / JSON qua /api
+                         ▼
+FastAPI · Python
+  API game ──────────────► Game Core ◄──────────── Solver
+  API solver ───────────► Benchmark wrapper       BFS / DFS / UCS / A*
+                              │
+                              └── đo đạc và kiểm chứng path
+                         │
+                         ▼
+                    maps/*.json
 ```
 
-**Python là nguồn luật duy nhất.** Frontend gọi `/api/game/step` để kiểm tra nước đi trước khi diễn hoạt, không tự tính nước hợp lệ.
+**Backend là nơi quyết định luật chơi.** Frontend gửi nước đi đến `/api/game/step` rồi diễn hoạt theo kết quả. Solver sử dụng `Game.neighbors()` để mở rộng trạng thái, dùng cùng luật cầu/công tắc với chơi tay. Benchmark wrapper replay lời giải bằng lõi game trước khi API trả trạng thái `solved`.
 
-```
-backend/
-  app/core/          luật chơi, trạng thái, chuyển trạng thái
-  app/solvers/       bfs.py, dfs.py, ucs.py, astar.py, contract.py
-  app/api/           route game và solver
-  app/benchmarking/  đo thời gian, bộ nhớ
-  tests/             kiểm thử (pytest)
-frontend/
-  src/app/           catalog, tiến độ, phiên chơi
-  src/screens/       các màn hình
-  src/game/          renderer, camera, input, animation
-  src/objects/       mô hình 3D (xưởng LEGO, khối, ô, đồ chơi)
-  src/ui/            thành phần giao diện
-maps/                bản đồ JSON
-scripts/             chạy test, kiểm tra và dựng bản đồ
-```
-
-Một renderer/canvas dùng chung cho mọi màn; khi đổi map, geometry/material/texture được giải phóng, khối người chơi được giữ lại.
-
-## Đóng góp
-
-Người cài thuật toán xem [SOLVER_GUIDE.md](SOLVER_GUIDE.md): file được sửa, hợp đồng solver, luật game và quy ước làm việc.
-
-## Nhóm thực hiện
-
-| Thành viên | Phần phụ trách |
+| Thư mục | Vai trò |
 |---|---|
-| Member 1 | BFS |
-| Member 2 | DFS |
-| Member 3 | UCS |
-| Member 4 | A\* |
-| Member 5 | Lõi game, giao diện web, solver API, tích hợp |
+| [`backend/app/core/`](backend/app/core/) | Board, trạng thái bất biến, phép lăn, luật chơi và cost model |
+| [`backend/app/solvers/`](backend/app/solvers/) | Bốn solver, `SolverResult` và registry thuật toán |
+| [`backend/app/benchmarking/`](backend/app/benchmarking/) | Đo thời gian, bộ nhớ và kiểm chứng lời giải |
+| [`backend/app/api/`](backend/app/api/) | REST API cho map, chơi game và solver |
+| [`backend/tests/`](backend/tests/) | Kiểm thử và oracle độc lập phục vụ kiểm chứng map |
+| [`frontend/src/`](frontend/src/) | Luồng ứng dụng, màn hình, mô hình 3D và bảng solver |
+| [`maps/`](maps/) | Bản đồ JSON dùng chung |
+| [`scripts/`](scripts/) | Kiểm tra map và chạy kiểm thử backend |
+| [`artifacts/`](artifacts/) | Ảnh và báo cáo từ các đợt kiểm tra giao diện |
 
-> Thay "Member N" bằng tên thật.
+### Các endpoint chính
+
+| Method | Endpoint | Chức năng |
+|---|---|---|
+| `GET` | `/api/health` | Kiểm tra backend |
+| `GET` | `/api/maps`, `/api/maps/{map_id}` | Danh sách và chi tiết map |
+| `POST` | `/api/game/initial` | Trạng thái khởi đầu |
+| `POST` | `/api/game/step` | Áp dụng một nước đi |
+| `POST` | `/api/game/validate-path` | Replay và kiểm tra path có đến đích |
+| `GET` | `/api/solvers` | Tên thuật toán đã đăng ký và cost model; không xác nhận đã cài solver |
+| `POST` | `/api/solve` | Chạy solver và benchmark |
+| `POST` | `/api/solve/mock-demo` | Lấy lời giải tham chiếu, có nhãn MOCK |
+
+Chi tiết request/response có tại `/docs` khi backend đang chạy. Ví dụ gọi solver từ PowerShell:
+
+```powershell
+$body = @{ map_id = "easy_01"; algorithm = "BFS"; cost_model = "uniform" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/solve -ContentType "application/json" -Body $body
+```
+
+Với checkout hiện tại, lời gọi này trả `status: not_implemented`. Sau khi solver được triển khai, API có thể trả `solved`, `unsolved` hoặc `invalid_path`.
+
+## Kiểm tra
+
+**Backend và bản đồ** — từ thư mục gốc, không cần bật server:
+
+```powershell
+./backend/.venv/Scripts/python.exe scripts/run_tests.py
+```
+
+Lệnh này chạy validator map rồi `pytest`. Muốn chỉ kiểm tra map, dùng `./backend/.venv/Scripts/python.exe scripts/validate_maps.py`. Oracle kiểm chứng map độc lập với bốn solver của đồ án; các kiểm tra này vượt qua không đồng nghĩa solver đã hoàn thành.
+
+**Build frontend** — từ `frontend/`, không cần bật server:
+
+```powershell
+npm run build
+```
+
+**Kiểm tra tích hợp giao diện** — từ `frontend/`, khi backend và Vite đều đang chạy:
+
+```powershell
+npm run test:frontend
+npm run test:browser
+```
+
+`test:frontend` kiểm tra DOM, API thật và geometry, với renderer WebGL được thay thế trong môi trường test. `test:browser` chạy trình duyệt Microsoft Edge qua Playwright và cần Edge được cài trên máy. Có thể đổi URL kiểm tra bằng biến môi trường `FRONTEND_TEST_URL`.
+
+## Phát triển tiếp
+
+- **Cài thuật toán:** bắt đầu tại [SOLVER_GUIDE.md](SOLVER_GUIDE.md). Tài liệu mô tả phạm vi file, hợp đồng solver, cách triển khai, heuristic A\*, kiểm thử và tiêu chí bàn giao.
+- **Thêm bản đồ:** tham khảo [map có cầu mẫu](maps/bridge_01.json) và [bộ nạp/kiểm tra cấu trúc](backend/app/core/board.py), thêm JSON vào `maps/` rồi chạy validator. Cập nhật `frontend/src/app/catalog.ts` nếu muốn đưa map vào nhóm nhiệm vụ chính.
+- **Thay đổi luật hoặc hợp đồng chung:** thống nhất với người phụ trách tích hợp trước khi chỉnh core, API, benchmark hoặc `SolverResult`.
+- **Gửi thay đổi:** dùng nhánh riêng và Pull Request có mô tả hành vi, phạm vi file và kết quả kiểm tra thực tế. Không commit môi trường ảo, `node_modules`, cache hoặc thư mục build.

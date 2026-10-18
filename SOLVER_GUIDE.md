@@ -1,155 +1,421 @@
-# Hướng dẫn cài thuật toán (BFS / DFS / UCS / A\*)
+# Hướng dẫn phát triển solver
 
-Tài liệu dành cho 4 bạn cài thuật toán: sửa file nào, tuân theo quy ước nào, luật game cần biết.
+Tài liệu triển khai **BFS, DFS, UCS và A\*** cho ReBlox, từ hợp đồng dữ liệu đến kiểm thử và tích hợp. Đọc [README](README.md) trước để thiết lập môi trường.
 
-## 1. Ai sửa file nào
+> **Trạng thái hiện tại:** cả bốn hàm `solve()` vẫn raise `SolverNotImplemented`. Registry, API, bảng solver và benchmark wrapper đã có sẵn. Việc cần làm là thay placeholder bằng thuật toán thật và bổ sung test riêng.
 
-| Thành viên | Nhánh | File được sửa |
-|---|---|---|
-| Member 1 | `solver/bfs` | `backend/app/solvers/bfs.py` |
-| Member 2 | `solver/dfs` | `backend/app/solvers/dfs.py` |
-| Member 3 | `solver/ucs` | `backend/app/solvers/ucs.py` |
-| Member 4 | `solver/astar` | `backend/app/solvers/astar.py` (heuristic đặt trong chính file này) |
+## Mục lục
 
-- Mỗi người **chỉ sửa 1 file** của mình. API và web tự nhận solver mới, không cần sửa gì khác.
-- **Không sửa** `backend/app/core/`, `backend/app/solvers/contract.py`, `backend/app/api/`, `maps/`. Cần thay đổi phần này thì nhắn Member 5 trước.
-- Được thêm file test mới (ví dụ `backend/tests/test_bfs.py`), không sửa test có sẵn.
-- **Không** dùng thư viện bên thứ ba để cài thuật toán.
+1. [Phạm vi và quy trình làm việc](#1-phạm-vi-và-quy-trình-làm-việc)
+2. [Mô hình bài toán và giao diện core](#2-mô-hình-bài-toán-và-giao-diện-core)
+3. [Hợp đồng đầu vào và kết quả](#3-hợp-đồng-đầu-vào-và-kết-quả)
+4. [Quy ước tìm kiếm và metric](#4-quy-ước-tìm-kiếm-và-metric)
+5. [Hướng triển khai từng thuật toán](#5-hướng-triển-khai-từng-thuật-toán)
+6. [Heuristic A* có chứng minh](#6-heuristic-a-có-chứng-minh)
+7. [Luật game ảnh hưởng đến tìm kiếm](#7-luật-game-ảnh-hưởng-đến-tìm-kiếm)
+8. [Kiểm thử và chạy thử](#8-kiểm-thử-và-chạy-thử)
+9. [API, benchmark và chẩn đoán](#9-api-benchmark-và-chẩn-đoán)
+10. [Tiêu chí hoàn thành Pull Request](#10-tiêu-chí-hoàn-thành-pull-request)
 
-## 2. Quy trình làm việc
+## 1. Phạm vi và quy trình làm việc
 
-- Mỗi người làm trên nhánh riêng ở bảng trên. **Không push thẳng vào `main`.**
-- Mỗi Pull Request: 1 mục đích, mô tả ngắn, và `python scripts/run_tests.py` phải xanh.
-- Không commit `node_modules`, `.venv`, `dist`, `__pycache__`.
-- Không bịa số liệu benchmark hay "kết quả test".
-- Comment giải thích *vì sao*, không lặp lại *cái gì*. Tên biến/hàm bằng tiếng Anh, tài liệu bằng tiếng Việt.
+| Phân công | Nhánh đề xuất | File thuật toán | File test mới |
+|---|---|---|---|
+| BFS | `solver/bfs` | `backend/app/solvers/bfs.py` | `backend/tests/test_solver_bfs.py` |
+| DFS | `solver/dfs` | `backend/app/solvers/dfs.py` | `backend/tests/test_solver_dfs.py` |
+| UCS | `solver/ucs` | `backend/app/solvers/ucs.py` | `backend/tests/test_solver_ucs.py` |
+| A\* | `solver/astar` | `backend/app/solvers/astar.py` | `backend/tests/test_solver_astar.py` |
 
-Cách chạy thử: bật backend (`uvicorn app.main:app --reload --port 8000`) và frontend (`npm run dev`), vào **Sổ kỹ thuật** để chạy solver trên từng map và xem replay. Cài đặt chi tiết xem [README.md](README.md).
+- Mỗi người chỉnh file thuật toán của mình và thêm test riêng. Heuristic A\* đặt trong `astar.py`.
+- Giữ nguyên chữ ký `solve()` và định dạng `SolverResult`; registry hiện tự nối từng module với API.
+- Không sửa core, API, benchmark wrapper, contract, map hoặc test có sẵn nếu chưa thống nhất với người phụ trách tích hợp.
+- Dùng thư viện chuẩn Python như `collections`, `heapq`, `itertools`; không dùng thư viện tìm kiếm bên thứ ba.
+- Làm trên nhánh riêng, gửi Pull Request; không push trực tiếp vào `main`. Kiểm tra `git diff` để tránh đưa file của người khác vào PR.
 
-## 3. Hàm cần cài
+Các docstring cũ còn nhắc `SOLVER_CONTRACT.md`; hợp đồng và hướng dẫn hiện được trình bày tại **chính tài liệu này** cùng [contract.py](backend/app/solvers/contract.py).
+
+## 2. Mô hình bài toán và giao diện core
+
+Không gian tìm kiếm là đồ thị: **node = `GameState`**, **cạnh = một nước lăn hợp lệ**, **trọng số = `step_cost`**. Mục tiêu là tìm path từ trạng thái được truyền vào đến trạng thái đứng tại đích.
+
+### Các thành phần nên đọc
+
+| File | Nội dung cần nắm |
+|---|---|
+| [engine.py](backend/app/core/engine.py) | `Game`, `neighbors`, `apply`, `replay`, `path_cost` |
+| [state.py](backend/app/core/state.py) | `GameState`, `BlockState`, `Orientation`, `Action` |
+| [rules.py](backend/app/core/rules.py) | Công tắc, tính hợp lệ và hai cost model |
+| [contract.py](backend/app/solvers/contract.py) | `SolverResult`, `failure`, `SolverNotImplemented` |
+| [metrics.py](backend/app/benchmarking/metrics.py) | Cách gọi solver, đo đạc và replay |
+
+### Giao diện dành cho solver
 
 ```python
-def solve(game: Game, initial_state: GameState) -> SolverResult
+from ..core.engine import Game
+from ..core.state import GameState
+from .contract import SolverResult, failure
+
+ALGORITHM = "BFS"  # DFS / UCS / ASTAR tùy module
+
+def solve(game: Game, initial_state: GameState) -> SolverResult:
+    ...
 ```
 
-Đặt trong `backend/app/solvers/<tên>.py`.
-
-### Giao diện `Game` (chỉ dùng những thứ này)
-
-| Gọi | Ý nghĩa |
+| Giao diện | Ý nghĩa |
 |---|---|
-| `game.initial_state()` | State đầu |
-| `game.is_goal(s)` | Kiểm tra đích |
-| `game.neighbors(s)` | `[(action, next_state, step_cost), ...]`, chỉ gồm nước hợp lệ, thứ tự cố định **UP, DOWN, LEFT, RIGHT** |
-| `game.cost_model.min_cost` | Chi phí tối thiểu 1 cạnh (dùng cho heuristic) |
+| `game.is_goal(state)` | Trạng thái đã đứng đúng ô đích hay chưa |
+| `game.neighbors(state)` | Danh sách `(action, next_state, step_cost)` hợp lệ |
+| `game.cost_model.min_cost` | Cận dưới chi phí mỗi cạnh, hiện là `1.0` |
+| `game.board.goal` | Tọa độ đích `(row, col)`, dùng khi tính heuristic |
+| `game.initial_state()` | Trạng thái khởi đầu của bản đồ |
 
-`action` là `Action` enum. Trong `path` ghi **tên chuỗi** (`action.value`): `"UP" "DOWN" "LEFT" "RIGHT"`. Hành động `"SWITCH_CUBE"` dành cho split (chưa cài), solver hiện tại **không** cần xử lý.
+**Tìm kiếm từ đối số `initial_state`**, không tự thay bằng `game.initial_state()`. API hiện truyền trạng thái đầu bản đồ, nhưng hàm solver vẫn phải làm đúng khi nhận một trạng thái hợp lệ khác.
 
-### State
+`game.neighbors()` trả các hành động theo thứ tự cố định **UP → DOWN → LEFT → RIGHT**, bỏ qua nước không hợp lệ. Solver không cần tự tính phép lăn, kiểm tra sàn hay kích hoạt công tắc.
 
-`GameState` đã hashable, dùng thẳng làm key của `set`/`dict`. Hai state bằng nhau ⇔ cùng vị trí khối **và** cùng tập cầu mở. **Đừng** dùng riêng `(row, col, orientation)` làm khóa, sẽ sai với map có cầu.
+### Khóa trạng thái phải đầy đủ
 
-### Kết quả trả về: `SolverResult`
+`GameState` là frozen dataclass và hashable; dùng trực tiếp làm key:
 
-Các trường: `algorithm, solved, path, expanded_nodes, generated_nodes, solution_length, solution_cost` (tùy chọn thêm `max_frontier_size`, `note`).
+```python
+visited: set[GameState] = {initial_state}
+g_score: dict[GameState, float] = {initial_state: 0.0}
+parent: dict[GameState, tuple[GameState, str] | None] = {initial_state: None}
+```
 
-Không giải được → `solved=False, path=[], solution_length=None, solution_cost=None` (dùng hàm `failure(...)` trong `contract.py`). Không raise exception cho trường hợp vô nghiệm, chỉ raise cho lỗi lập trình.
+State chứa `block`, `open_bridges` và trường `split` dành sẵn cho tính năng chưa triển khai. Hai trạng thái có cùng vị trí/tư thế nhưng khác cầu mở **là hai node khác nhau**. Dùng riêng `(row, col, orientation)` sẽ làm mất đường đi hợp lệ trên map có công tắc.
 
-## 4. Những điều đã thống nhất
+Không chỉnh sửa `game.board`, trạng thái hay dữ liệu map trong quá trình tìm kiếm.
 
-### Cách đếm số liệu
+## 3. Hợp đồng đầu vào và kết quả
 
-- **expanded**: state bị lấy khỏi frontier **và** gọi `neighbors` để sinh successor. Đếm 1 lần mỗi lần mở (không đếm state bị bỏ vì đã thăm).
-- **generated**: tổng số successor nhận từ `neighbors`, đếm **trước** khi lọc trùng.
-- `solution_cost` = tổng `step_cost` dọc `path`; `solution_length = len(path)`.
-- Thời gian và bộ nhớ **không** đo trong solver, do `benchmarking/metrics.py` đo.
+Hàm luôn trả một `SolverResult` khi tìm thấy hoặc không tìm thấy nghiệm. Sau khi cài xong, bỏ dòng raise `SolverNotImplemented`; không thay nó bằng lời giải tham chiếu.
 
-### Trạng thái lặp
-
-Dùng graph search với tập `visited`/`explored`. UCS và A\*: cho phép cập nhật nếu tìm được `g` nhỏ hơn.
-
-### Tie-breaking (để kết quả lặp lại được)
-
-- Duyệt successor theo đúng thứ tự `game.neighbors` (UP, DOWN, LEFT, RIGHT).
-- Hàng đợi ưu tiên: khóa là `(f hoặc g, thứ tự sinh tăng dần)`.
-- DFS dùng stack: đẩy successor theo thứ tự **ngược** để UP được mở trước, và ghi rõ lựa chọn trong docstring.
-
-### Chi phí và tính tối ưu
-
-Chỉ so sánh tối ưu chi phí khi **cùng cost model**.
-
-| Thuật toán | Tính tối ưu |
+| Trường | Quy ước |
 |---|---|
-| BFS | Tối ưu theo **số nước**; tối ưu theo chi phí chỉ khi cost model là `uniform` |
-| DFS | Không đảm bảo tối ưu |
-| UCS | Tối ưu theo chi phí với mọi cost model không âm |
-| A\* | Tối ưu nếu heuristic admissible (với graph search cần thêm consistent) |
+| `algorithm` | Chính xác `"BFS"`, `"DFS"`, `"UCS"` hoặc `"ASTAR"` |
+| `solved` | `True` khi đã tìm thấy path đến đích |
+| `path` | `list[str]`, mỗi phần tử là `action.value`: `"UP"`, `"DOWN"`, `"LEFT"`, `"RIGHT"` |
+| `expanded_nodes` | Số lần lấy một entry hợp lệ khỏi frontier và gọi `neighbors()` |
+| `generated_nodes` | Tổng successor được trả về từ `neighbors()`, trước lọc trùng |
+| `solution_length` | `len(path)` khi solved; `None` khi không có nghiệm |
+| `solution_cost` | Tổng chi phí các cạnh trong path; `None` khi không có nghiệm |
+| `max_frontier_size` | Tùy chọn: số entry lớn nhất cùng nằm trong queue/stack/heap; để `None` nếu chưa đo |
+| `note` | Ghi chú ngắn, mặc định `""` |
 
-Cost model: `uniform` (mỗi nước = 1, mặc định, dùng để so sánh) và `orientation_weighted` (nước bắt đầu từ STANDING tốn 2, còn lại 1, dùng cho thí nghiệm UCS). Mọi chi phí ≥ 1.
+Tạo kết quả thành công bằng keyword để tránh nhầm vị trí các trường:
 
-### Heuristic cho A\*
+```python
+return SolverResult(
+    algorithm=ALGORITHM,
+    solved=True,
+    path=path,
+    expanded_nodes=expanded,
+    generated_nodes=generated,
+    solution_length=len(path),
+    solution_cost=g_score[goal_state],  # hoặc tổng cost đã lưu dọc nhánh
+    max_frontier_size=max_frontier,
+)
+```
 
-Chữ ký gợi ý: `def h(game, state) -> float`. Yêu cầu:
+Khi frontier đã cạn mà chưa có đích:
 
-- **Admissible**: `h(s) ≤ chi phí thật còn lại`.
-- **Consistent**: `h(s) ≤ cost(s, a, s') + h(s')`.
+```python
+return failure(ALGORITHM, expanded, generated, note="Frontier rỗng: không có nghiệm")
+```
 
-Cả hai cost model đều có `min_cost = 1`, nên `h = (số nước tối thiểu ước lượng) × min_cost` có thể vẫn admissible, nhưng **phải tự chứng minh hoặc kiểm thử**. Ví dụ an toàn: `h = 0` (suy biến thành UCS). Khoảng cách Manhattan **chia cho 2** (mỗi nước lăn dịch tối đa 2 ô) là ứng viên, nhưng với cầu/công tắc cần cẩn thận. Gợi ý kiểm thử: trên cùng map và cost model, A\* và UCS phải cho cùng `solution_cost`.
+`failure()` đặt `max_frontier_size=None`. Nếu cần giữ metric này khi thất bại, tạo `SolverResult` bằng keyword hoặc gán vào kết quả helper trước khi trả.
 
-## 5. Luật game (bản cài đặt hiện tại)
+Nếu `initial_state` đã là đích: trả `solved=True`, `path=[]`, `solution_length=0`, `solution_cost=0.0`, `expanded_nodes=0`, `generated_nodes=0`. Path rỗng không tự động có nghĩa là thất bại.
 
-### Khối
+Trường hợp vô nghiệm là kết quả bình thường, không raise exception. Nếu chủ động áp giới hạn tài nguyên, ghi rõ lý do dừng trong `note`; dừng vì giới hạn **không chứng minh** map vô nghiệm. Contract hiện chưa có status riêng cho trường hợp này.
 
-Kích thước 1×1×2. `BlockState(row, col, orientation)`, trong đó `(row, col)` là **ô trên-trái** mà khối chiếm.
+## 4. Quy ước tìm kiếm và metric
 
-- STANDING: `(r,c)`
-- HORIZONTAL: `(r,c)`, `(r,c+1)`
-- VERTICAL: `(r,c)`, `(r+1,c)`
+### Thứ tự xử lý một entry
 
-Trục: `row` tăng = xuống, `col` tăng = sang phải.
+```text
+Lấy entry khỏi frontier
+  → Bỏ entry trùng/đã lỗi thời nếu có
+  → Kiểm tra goal; nếu đúng, dựng path và trả kết quả
+  → Gọi neighbors đúng một lần; expanded += 1
+  → generated += len(neighbors)
+  → Lọc hoặc relax successor rồi đưa vào frontier
+```
 
-### Ký hiệu ô trong `grid`
+- Goal được kiểm tra trước khi mở rộng nên **node đích không tăng `expanded_nodes`**.
+- `generated_nodes` gồm cả successor đã gặp, không chỉ node được thêm vào frontier; không tính trạng thái đầu như một successor.
+- UCS/A\* có thể mở lại một state nếu tìm thấy `g` tốt hơn. Mỗi lần thực sự gọi `neighbors()` đều được tính vào expanded.
+- Không đếm entry heap lỗi thời bị bỏ qua. Không gọi lại `neighbors()` chỉ để đếm metric.
+- Nếu đo frontier, tính cả các entry lỗi thời còn trong heap; với frontier ban đầu chứa một state, kích thước ban đầu là 1.
+
+### Tính xác định và dựng path
+
+Giữ thứ tự successor của core. Với heap, dùng counter tăng dần để phân xử cùng độ ưu tiên:
+
+```python
+from heapq import heappush
+from itertools import count
+
+order = count()
+heappush(frontier, (priority, next(order), g, state))
+```
+
+Counter duy nhất giúp heap không phải so sánh `GameState` khi priority bằng nhau. Với DFS dùng stack, duyệt danh sách successor theo thứ tự đảo để UP được lấy ra trước; ghi rõ quy ước trong docstring.
+
+Lưu `parent[next_state] = (state, action.value)` khi nhận node mới hoặc khi cập nhật `g` tốt hơn. Khi đến đích, lần ngược về `initial_state`, thu hành động rồi đảo danh sách. Không cần sao chép cả path cho từng node.
+
+### Hai mô hình chi phí
+
+| Cost model | Chi phí một nước đi |
+|---|---|
+| `uniform` | Luôn `1.0` |
+| `orientation_weighted` | `2.0` nếu trạng thái **trước nước đi** là STANDING; còn lại `1.0` |
+
+Luôn dùng `step_cost` từ `neighbors()`. BFS/DFS cũng phải báo đúng chi phí khi chạy với `orientation_weighted`; không gán `solution_cost = len(path)` trong mọi trường hợp.
+
+## 5. Hướng triển khai từng thuật toán
+
+Các bước dưới đây là hướng dẫn triển khai, chưa phải thuật toán đã có trong repository.
+
+### BFS — Breadth-First Search
+
+1. Dùng `collections.deque`, lấy đầu bằng `popleft()` và thêm cuối bằng `append()`.
+2. Đánh dấu đã thấy **khi đưa vào queue**, kể cả trạng thái đầu, để tránh enqueue trùng.
+3. Lấy state ra, kiểm tra goal rồi mới mở rộng.
+4. Với successor chưa thấy: lưu parent, chi phí tích lũy dọc nhánh và thêm vào queue.
+5. Queue cạn thì trả thất bại.
+
+BFS tìm lời giải ít nước nhất. Chỉ bảo đảm tối ưu chi phí khi mọi cạnh đồng giá, như `uniform`.
+
+### DFS — Depth-First Search
+
+1. Dùng list làm stack, lấy cuối bằng `pop()`; tránh đệ quy để không phụ thuộc giới hạn recursion của Python.
+2. Dùng graph search với tập đã thấy để chặn chu trình. Có thể đánh dấu khi push; giữ parent của lần khám phá đầu tiên.
+3. Sau khi kiểm tra goal và lấy successor, push theo thứ tự đảo **RIGHT → LEFT → DOWN → UP** đối với những hướng có trong danh sách.
+4. Lưu chi phí tích lũy của nhánh được chọn, không dùng độ sâu thay cho cost trong mọi cost model.
+5. Stack cạn thì trả thất bại.
+
+DFS không bảo đảm đường đi ngắn nhất hoặc rẻ nhất. Đánh dấu khi push cũng có thể khiến đường đi khác DFS đệ quy; điều cần giữ là tính hợp lệ, quy ước đã công bố và kết quả lặp lại được.
+
+### UCS — Uniform-Cost Search
+
+1. Dùng min-heap với priority bằng `g`, khởi tạo `g_score[initial_state] = 0.0`.
+2. Mỗi entry lưu cả `g` tại thời điểm push. Khi pop, bỏ entry nếu `g` không còn khớp `g_score[state]` tốt nhất.
+3. Kiểm tra goal **khi pop entry tốt nhất**, không trả ngay khi vừa sinh ra goal.
+4. Với mỗi cạnh, tính `new_g = g + step_cost`. Chỉ khi `new_g` nhỏ hơn giá trị đã biết mới cập nhật `g_score`, parent và push entry mới.
+5. Không cần sửa entry cũ trong heap; cơ chế bỏ entry lỗi thời xử lý việc này.
+
+Với chi phí hiện tại đều dương, UCS tối ưu tổng chi phí. Không dùng một visited-set khóa state ngay từ lúc push như BFS: một đường đến cùng state với cost thấp hơn có thể được tìm thấy sau.
+
+### A* — A-Star Search
+
+Giữ cơ chế `g_score`, parent, counter, bỏ entry lỗi thời và relax giống UCS; đổi priority thành **`f = g + h(state)`**.
+
+- Dùng `h=0` để kiểm tra bản triển khai ban đầu có hành vi tương đương UCS.
+- Sau đó thêm heuristic có giải thích và kiểm thử; một lựa chọn an toàn nằm ở mục 6.
+- Dừng khi pop goal hợp lệ. Nếu heuristic chỉ admissible nhưng không consistent, cần cho phép **mở lại state** khi `g` tốt hơn; không khóa vĩnh viễn bằng closed-set.
+- Với heuristic consistent, A\* graph search có thể đóng state sau khi pop tốt nhất mà vẫn giữ tối ưu. Dùng cơ chế relax/mở lại vẫn giúp triển khai rõ ràng.
+
+| Thuật toán | Frontier | Bảo đảm trên đồ thị trạng thái hữu hạn hiện tại |
+|---|---|---|
+| BFS | FIFO queue | Đầy đủ, tối ưu số nước |
+| DFS | LIFO stack + chặn lặp | Đầy đủ nếu không cắt giới hạn, không bảo đảm tối ưu |
+| UCS | Heap theo `g` | Đầy đủ, tối ưu chi phí với cost hiện tại |
+| A\* | Heap theo `g+h` | Tối ưu với heuristic admissible và xử lý mở lại phù hợp; consistent cho phép đóng state |
+
+## 6. Heuristic A* có chứng minh
+
+Khởi đầu bằng `h=0` là hợp lệ. Khi cần heuristic có thông tin, dùng khoảng cách Manhattan từ **ô neo trên-trái** của khối đến ô đích, chia 2:
+
+```python
+def heuristic(game: Game, state: GameState) -> float:
+    goal_row, goal_col = game.board.goal
+    block = state.block
+    distance = abs(block.row - goal_row) + abs(block.col - goal_col)
+    return (distance / 2.0) * game.cost_model.min_cost
+```
+
+Đây là heuristic cho chế độ khối nguyên hiện tại, không bao gồm cơ chế split chưa triển khai.
+
+**Vì sao admissible?** Mỗi nước lăn chỉ thay đổi một tọa độ của ô neo, nhiều nhất 2 ô. Để giảm khoảng cách Manhattan `d` về 0 cần ít nhất `d/2` nước; mỗi nước tốn ít nhất `min_cost`. Việc bỏ qua vật cản, tư thế cuối và cầu/công tắc chỉ làm cận dưới này yếu hơn. Tại goal, `h=0`.
+
+**Vì sao consistent?** Với hai trạng thái kề nhau `s → s'`, bất đẳng thức tam giác cho `d(s) ≤ 2 + d(s')`. Suy ra `h(s) ≤ min_cost + h(s') ≤ step_cost + h(s')`.
+
+Điều kiện chứng minh vẫn đúng trên map có cầu/công tắc vì chúng thay đổi tính hợp lệ của cạnh, không tạo dịch chuyển xa hơn một phép lăn. Nếu core bổ sung teleport, split hoặc chi phí nhỏ hơn cận dưới đã công bố, phải đánh giá lại heuristic.
+
+Kiểm tra heuristic bằng ba lớp bằng chứng:
+
+1. `h(goal) == 0`, `h(state) >= 0`.
+2. Với các cạnh được duyệt, kiểm tra `h(s) <= step_cost + h(s')` (thêm sai số nhỏ nếu cần cho số thực).
+3. Trên cùng map và cost model, A\* và UCS phải có cùng `solved` và cùng `solution_cost` khi có nghiệm. Path không nhất thiết giống nhau.
+
+So sánh với UCS trên vài map là kiểm tra hồi quy hữu ích, không thay thế chứng minh admissibility/consistency. Heuristic mạnh hơn có thể dựa trên khoảng cách trong bài toán nới lỏng, nhưng cần mô tả rõ điều kiện và cách kiểm chứng.
+
+## 7. Luật game ảnh hưởng đến tìm kiếm
+
+### Tư thế và tọa độ
+
+`BlockState(row, col, orientation)` dùng ô neo **trên-trái**. `row` tăng theo chiều xuống; `col` tăng sang phải.
+
+| Tư thế | Các ô chiếm giữ |
+|---|---|
+| `STANDING` | `(r, c)` |
+| `HORIZONTAL` | `(r, c)`, `(r, c+1)` |
+| `VERTICAL` | `(r, c)`, `(r+1, c)` |
+
+### Sàn, cầu và công tắc
 
 | Ký hiệu | Ý nghĩa |
 |---|---|
-| `.` | Void (không có sàn) |
-| `#` | Sàn |
-| `F` | Ô dễ vỡ |
-| `G` | Ô đích |
-| `s` | Soft switch |
-| `h` | Heavy switch |
-| `X` | Split switch (**chưa cài**) |
+| `.` | Không có sàn; có thể là ô cầu nếu được khai báo trong `bridges` |
+| `#` | Sàn thường |
+| `F` | Ô dễ vỡ: nằm được, đứng không được |
+| `G` | Ô đích: chỉ thắng khi đứng đúng ô |
+| `s` | Soft switch: kích hoạt khi bất kỳ phần khối nào chạm |
+| `h` | Heavy switch: chỉ kích hoạt khi đứng |
+| `X` | Split switch: chưa hỗ trợ |
 
-Ô cầu được ghi `.` trong `grid` và liệt kê trong `bridges`; ô cầu có sàn **chỉ khi cầu đang mở**.
+Công tắc tác động khi khối đáp xuống sau mỗi nước đi: `toggle` đảo trạng thái cầu, `open` mở cầu, `close` đóng cầu. `open` không tự đóng khi rời công tắc; một công tắc khác vẫn có thể đóng cầu đó. Nếu khối chạm nhiều công tắc, core xử lý từng công tắc theo các ô chiếm giữ.
 
-### Hợp lệ (`is_valid`)
+Thứ tự core xử lý một nước đi:
 
-1. Mọi ô khối chiếm phải nằm trong biên và có sàn (ô sàn hoặc cầu đang mở).
-2. Đứng thẳng (STANDING) trên `F` → **vỡ, bất hợp lệ**. Nằm trên `F` thì được.
+1. Lăn khối theo hình học.
+2. Kiểm tra sàn và ô dễ vỡ với trạng thái cầu **trước** khi kích hoạt công tắc.
+3. Áp dụng các công tắc dưới khối.
+4. Kiểm tra lại với cấu hình cầu mới; đóng cầu ngay dưới khối khiến nước đi bị loại.
 
-### Thắng (`is_goal`)
+Solver chỉ lấy successor hợp lệ từ core, không tự viết phiên bản luật khác. Goal là trạng thái kết thúc; core không cho đi tiếp từ goal.
 
-STANDING đúng ô `G`. Nằm ngang/dọc qua `G` **không** thắng. Đến goal rồi, mọi nước tiếp theo bị từ chối (`already_goal`).
+`SWITCH_CUBE` tồn tại trong enum nhưng chưa được hỗ trợ. Không sinh hành động này. Map dùng split bị loader thông thường từ chối; API chơi/giải từ chối map có trạng thái `pending`.
 
-### Công tắc
+## 8. Kiểm thử và chạy thử
 
-- **soft**: kích hoạt khi **bất kỳ** ô khối chiếm trùng công tắc. **heavy**: chỉ khi STANDING.
-- Mỗi **nước đi** mà vị trí đáp trùng công tắc → kích hoạt **một lần**.
-- `effect`: `toggle` (đảo mỗi lần), `open` (mở, không tự đóng), `close` (đóng). "Cầu vĩnh viễn" = effect `open`.
+### Chạy các kiểm tra có sẵn
 
-### Thứ tự xử lý một nước đi
+Từ thư mục gốc, sau khi cài dependencies theo README:
 
-1. `roll` → vị trí mới (hình học).
-2. Kiểm tra hợp lệ bằng cấu hình cầu **hiện tại**; sai ⇒ "fell".
-3. Kích hoạt công tắc dưới khối ⇒ cấu hình cầu mới.
-4. Kiểm tra hợp lệ lại bằng cấu hình cầu **mới** (cầu đóng ngay dưới khối ⇒ "fell").
+```powershell
+./backend/.venv/Scripts/python.exe scripts/run_tests.py
+```
 
-> Quy ước bước 4 là lựa chọn thiết kế hiện tại, cần đối chiếu lại với đề bài.
+Chạy riêng test solver của mình:
 
-### Giá trị trả về của nước đi
+```powershell
+cd backend
+./.venv/Scripts/python.exe -m pytest tests/test_solver_bfs.py -q
+```
 
-`apply_action(board, state, action)` trả về **state mới** hoặc **`None`** nếu bất hợp lệ, **không bao giờ raise exception** cho nước đi sai. `step()` cho thêm lý do: `ok | fell | unsupported_action | already_goal`.
+Đổi tên file theo thuật toán. Bộ test hiện tại kiểm tra core, API, map và benchmark; **chưa đủ để nghiệm thu bốn solver mới**.
 
-### Chưa cài
+### Ma trận kiểm thử cần bổ sung
 
-Split switch, tách thành 2 khối nhỏ, hành động `SWITCH_CUBE`, di chuyển từng khối, gộp lại. Map có `X` bị `UnsupportedMechanic` (trừ khi `allow_pending=True`), và API từ chối chơi/giải map `pending`.
+| Trường hợp | Điều cần xác nhận |
+|---|---|
+| `easy_01`, `easy_02`, `medium_01` | Có nghiệm; path hợp lệ, đến goal, length và cost đúng |
+| `fragile_01` | Path không đứng trên ô dễ vỡ |
+| `bridge_01` | Tìm kiếm giữ trạng thái cầu, path replay được qua công tắc |
+| `unsolvable_01` | Dừng, `solved=False`, path rỗng, length/cost là `None` |
+| Cả hai cost model | Cost bằng tổng chi phí thật, không mặc định bằng số nước |
+| Initial state đã là goal | Nghiệm rỗng, cost 0, không mở rộng |
+| Initial state khác đầu map | Bắt đầu đúng đối số truyền vào, không tự reset |
+| Đồ thị có chu trình | Không lặp vô hạn; thống kê tuân theo quy ước |
+| Hai đường đến cùng state với cost khác nhau | UCS/A\* relax đúng, bỏ entry lỗi thời và không dừng sớm khi sinh goal |
+| Chạy nhiều lần cùng input | Path và metric đếm node nhất quán; thời gian/bộ nhớ có thể khác |
+
+Trên `uniform`, đối chiếu độ dài tối ưu của BFS/UCS/A\* với oracle trong `backend/tests/oracle.py`. Trên `orientation_weighted`, oracle BFS đó **không phải oracle chi phí**; cần kiểm tra UCS bằng trường hợp nhỏ có cost tính tay hoặc oracle Dijkstra độc lập trong test. A\* phải khớp cost với UCS đã được kiểm chứng. DFS chỉ cần hợp lệ, không buộc khớp nghiệm tối ưu.
+
+Oracle và `reference_solution` chỉ dùng để kiểm thử; solver không được đọc/chạy chúng để tạo kết quả.
+
+### Ví dụ test lời giải thật
+
+Thêm vào file test riêng; ví dụ dưới dùng BFS và sẽ thất bại ở checkout hiện tại cho đến khi BFS được cài:
+
+```python
+import pytest
+
+from app.core import CostModel, Game, load_board, maps_dir
+from app.solvers.bfs import solve
+
+
+@pytest.mark.parametrize("cost_model", ["uniform", "orientation_weighted"])
+def test_solution_replays_and_cost_matches(cost_model):
+    game = Game(load_board(maps_dir() / "easy_01.json"), CostModel(cost_model))
+    result = solve(game, game.initial_state())
+
+    assert result.algorithm == "BFS"
+    assert result.solved
+    valid, _, steps = game.replay(result.path)
+    assert valid
+    assert steps == result.solution_length == len(result.path)
+    assert result.solution_cost == pytest.approx(game.path_cost(result.path))
+    assert result.expanded_nodes >= 0
+    assert result.generated_nodes >= 0
+```
+
+Đổi import và tên thuật toán khi dùng cho module khác; bổ sung test vô nghiệm, tối ưu và các trường hợp biên riêng. `game.replay()` và `game.path_cost()` luôn bắt đầu từ **đầu bản đồ**. Khi test `initial_state` tùy chọn, phải tự áp dụng từng action từ state đã truyền, cộng cost từ trạng thái trước nước đi rồi kiểm tra goal cuối.
+
+### Kiểm tra metric bằng trường hợp nhỏ
+
+Tạo board một hàng `grid=["###G"]`, start `(0, 0)`, goal `(0, 3)` qua `Board.from_dict()` hoặc helper `make_board` trong `backend/tests/helpers.py`. Lời giải là `RIGHT, RIGHT`:
+
+- `solution_length = 2`.
+- `solution_cost = 2.0` với `uniform`, `3.0` với `orientation_weighted`.
+- Theo quy ước pop-goal trước mở rộng: `expanded_nodes = 2`, `generated_nodes = 3` (successor quay về start vẫn được tính).
+
+Trường hợp này bắt được lỗi đếm goal, bỏ successor trùng khỏi generated và tính cost theo tư thế sau nước đi.
+
+### Chạy trên giao diện
+
+Bật backend và frontend theo README, mở **Sổ kỹ thuật**, chọn map và cost model, rồi bấm thuật toán. Kiểm tra cả kết quả, metric và replay. Thử thêm `unsolvable_01` để xác nhận giao diện nhận kết quả thất bại bình thường. Nút MOCK không chứng minh solver hoạt động.
+
+## 9. API, benchmark và chẩn đoán
+
+### Luồng tích hợp
+
+```text
+POST /api/solve
+  → registry chọn solve()
+  → run_benchmark() gọi solve hai lần
+  → replay và tính lại cost của kết quả lần đầu
+  → API trả status cùng result
+  → frontend hiển thị metric và replay path đã kiểm tra
+```
+
+Benchmark wrapper gọi solver **hai lần độc lập**: lần đầu đo `perf_counter`, lần hai đo bộ nhớ bằng `tracemalloc`. Chỉ kết quả lần đầu được trả về; số đo bộ nhớ thuộc lần thứ hai. Vì vậy mọi dữ liệu tìm kiếm phải khởi tạo trong `solve()`, tránh cache/tập visited toàn cục hay dữ liệu còn lại từ lần trước.
+
+| Số đo do wrapper thêm | Ý nghĩa và giới hạn |
+|---|---|
+| `search_time_s` | Thời gian lần gọi solver đầu, không gồm render hoặc replay |
+| `peak_memory_bytes` | Đỉnh cấp phát Python do `tracemalloc` ghi nhận trong lần gọi thứ hai; không phải tổng RAM tiến trình |
+| `replay_valid` | Path của kết quả solved có hợp lệ và kết thúc ở goal hay không |
+| `verified_cost` | Cost tính lại từ path hợp lệ; `None` khi không có path được xác nhận |
+
+Không tự đo thời gian hoặc bộ nhớ trong solver. Khi so sánh, giữ cùng map, cost model và môi trường chạy; không lấy một lần đo nhỏ để kết luận tuyệt đối về tốc độ.
+
+### Các trạng thái cần phân biệt
+
+| `status` | Ý nghĩa | Cách xử lý |
+|---|---|---|
+| `not_implemented` | Solver vẫn raise `SolverNotImplemented` | Cài thuật toán; kiểm tra đúng module/checkout đang chạy |
+| `solved` | Solver báo có nghiệm và wrapper replay đến goal | Kiểm tra thêm length/cost và tính tối ưu trong test |
+| `unsolved` | Solver trả `solved=False` | Xem `note`; kiểm tra có cạn frontier hay bị cắt giới hạn |
+| `invalid_path` | Solver báo solved nhưng replay thất bại | Kiểm tra dựng parent, thứ tự action, khóa trạng thái và xử lý goal |
+| `mock` | Endpoint demo trả path tham chiếu | Chỉ dùng trình diễn replay; không báo là kết quả thuật toán |
+| `no_reference` | Endpoint demo không có path tham chiếu | Không suy diễn thành kết luận từ solver |
+
+Map `pending` bị `/api/solve` từ chối bằng HTTP 400; thuật toán lạ trả 404, cost model không hợp lệ trả 422.
+
+**Giới hạn kiểm chứng hiện tại:** wrapper kiểm tra path và tính `verified_cost`, nhưng không tự đối chiếu `solution_cost`, `solution_length` hoặc các bộ đếm do solver khai báo. `status=solved` không bảo đảm tất cả metric đều đúng hay lời giải tối ưu; test riêng phải xác nhận các điều này.
+
+## 10. Tiêu chí hoàn thành Pull Request
+
+- [ ] `solve(game, initial_state)` dùng đúng đầu vào, không còn placeholder hoặc phụ thuộc oracle/reference path.
+- [ ] Trả đúng contract cho cả có nghiệm, vô nghiệm và initial state đã là goal.
+- [ ] State-key giữ đầy đủ cấu hình cầu; không sửa core/board hay dùng dữ liệu tìm kiếm toàn cục.
+- [ ] Path, cost, length và bộ đếm đã được kiểm chứng; UCS/A\* xử lý cập nhật `g` đúng.
+- [ ] Có test riêng cho tính hợp lệ, trường hợp biên và bảo đảm tối ưu phù hợp thuật toán.
+- [ ] A\* có giải thích heuristic và bằng chứng admissible/consistent hoặc xử lý mở lại state phù hợp.
+- [ ] `scripts/run_tests.py` và test riêng đều vượt qua; đã thử API/giao diện nếu báo hoàn thành tích hợp.
+- [ ] PR chỉ gồm file được phân công và test riêng, không chứa cache hay môi trường cài đặt.
+- [ ] Mô tả PR nêu thay đổi, quy ước tie-breaking, lệnh kiểm tra và kết quả thực tế; không đưa metric chưa đo.
