@@ -1,9 +1,4 @@
-"""Solver ASTAR — PLACEHOLDER chờ Member 4 cài đặt.
-
-Chỉ sửa file này (và test riêng tests/test_solver_astar.py). Đọc SOLVER_CONTRACT.md trước.
-Dùng: game.initial_state(), game.is_goal(s), game.neighbors(s) -> [(action, next_state, cost)].
-Hàm phải trả SolverResult với algorithm="ASTAR". Khi cài xong, xóa dòng raise bên dưới.
-"""
+"""A* with relaxed-board distances; use h=0 on boards with splitters."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,7 +11,7 @@ from ..core.engine import Game
 from ..core.state import GameState
 from ..core.board import FLOOR_TILES
 from ..core.transitions import get_occupied_cells , roll
-from .contract import SolverNotImplemented, SolverResult , failure
+from .contract import SolverResult , failure
 from ..core.state import DIRECTIONS, BlockState, GameState, Orientation
 
 ALGORITHM = "ASTAR"

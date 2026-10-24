@@ -86,7 +86,12 @@ assert.equal($('.map-option[aria-pressed=true]').dataset.id,'bridge_01');
 console.log('PASS: expanded groups return to menu after the final map; per-group selection, resume, pause/help/settings and hints preserved');
 const beforeLab=JSON.stringify(exports.readSave()); await click('[data-action=lab]');
 assert.equal(document.querySelectorAll('#lab-level option').length,maps.length);
-for(const algo of ['BFS','DFS','UCS','ASTAR']) { await click(`[data-algo=${algo}]`); assert.match($('#solver-status').textContent,/ch\u01b0a/); }
+for(const algo of ['BFS','DFS','UCS','ASTAR']) {
+  await click(`[data-algo=${algo}]`);
+  assert.equal($('#solver-status').textContent, 'Đã phát xong đường đi của solver.');
+  assert.match($('#solver-metrics').textContent, new RegExp(algo));
+  assert.equal(JSON.stringify(exports.readSave()), beforeLab);
+}
 await click('#btn-mock'); assert.match($('#solver-status').textContent,/MOCK/); assert.equal(JSON.stringify(exports.readSave()),beforeLab);
 assert($('#lab-level option[value="split_pending_01"]').disabled);
 await click('[data-action=maps]'); assert.deepEqual([...document.querySelectorAll('.map-option')].map(el=>el.dataset.id),groups.robot);

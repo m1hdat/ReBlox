@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from app.core import Game
 from app.main import app
@@ -39,11 +40,31 @@ def test_validate_path():
     assert not client.post("/api/game/validate-path", json={"map_id": "easy_01", "path": ["JUMP"]}).json()["valid"]
 
 
-def test_solvers_report_not_implemented_until_teammates_finish():
-    r = client.post("/api/solve", json={"map_id": "easy_01", "algorithm": "BFS"}).json()
-    assert r["status"] in ("not_implemented", "solved")   # đổi thành 'solved' khi Member 1 cài xong
-    if r["status"] == "not_implemented":
-        assert "result" not in r                           # không có metric giả
+@pytest.mark.parametrize("algorithm", ["BFS", "DFS", "UCS", "ASTAR"])
+@pytest.mark.parametrize("cost_model", ["uniform", "orientation_weighted"])
+@pytest.mark.parametrize("map_id", [
+    "easy_01", "easy_02", "medium_01", "fragile_01", "bridge_01",
+    "heavy_01", "toggle_01", "permanent_01", "advanced_01", "split_01", "unsolvable_01",
+])
+def test_all_solvers_return_real_verified_results(algorithm, cost_model, map_id):
+    response = client.post("/api/solve", json={
+        "map_id": map_id, "algorithm": algorithm, "cost_model": cost_model,
+    })
+    assert response.status_code == 200
+    payload = response.json()
+    solved = map_id != "unsolvable_01"
+    assert payload["status"] == ("solved" if solved else "unsolved")
+    assert payload["mock"] is False and payload["algorithm"] == algorithm
+    result = payload["result"]
+    assert result["algorithm"] == algorithm and result["solved"] is solved
+    assert result["replay_valid"] is solved
+    assert result["search_time_s"] >= 0 and result["peak_memory_bytes"] > 0
+    if solved:
+        assert result["solution_length"] == len(result["path"])
+        assert result["solution_cost"] == pytest.approx(result["verified_cost"])
+    else:
+        assert result["path"] == []
+        assert result["solution_length"] is result["solution_cost"] is result["verified_cost"] is None
 
 
 def test_mock_is_labeled():

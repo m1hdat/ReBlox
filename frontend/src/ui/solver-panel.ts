@@ -47,7 +47,7 @@ export function initSolverPanel(root: HTMLElement, hooks: SolverPanelHooks) {
   }
   root.querySelectorAll<HTMLButtonElement>("[data-algo]").forEach((button) => button.addEventListener("click", () => void run(false, button.dataset.algo)));
   root.querySelector("#btn-mock")!.addEventListener("click", () => void run(true));
-  const reset = () => { setStatus("Chưa có kết quả. Solver chưa cài sẽ trả trạng thái “Chưa cài đặt”; không tạo số liệu thay thế."); clearMetrics(); };
+  const reset = () => { setStatus("Chọn thuật toán để tìm đường đi và đo hiệu năng."); clearMetrics(); };
   cost.addEventListener("change", () => {
     reset(); root.querySelector("#solver-comparison")!.textContent = "Chạy thuật toán để so sánh với cùng hàm chi phí đang chọn.";
   });

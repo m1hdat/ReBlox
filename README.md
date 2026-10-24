@@ -17,10 +17,10 @@ Trong một tiệm sửa đồ chơi, bạn lăn linh kiện 1×1×2 qua bàn l�
 | Giao diện Three.js, chọn nhiệm vụ, xem trước bản đồ, chơi tay và màn kết quả | Đã triển khai |
 | Tiến độ và kỷ lục chơi tay | Lưu trong `localStorage` của trình duyệt |
 | Sổ kỹ thuật: gọi solver, chọn cost model, hiển thị metric và replay | Đã có luồng tích hợp |
-| BFS / DFS / UCS / A\* | **Cả bốn còn là placeholder** trong `backend/app/solvers/` |
+| BFS / DFS / UCS / A\* | **Đã tích hợp cả bốn solver**, có kiểm thử lời giải và metric |
 | Split switch, tách/đổi/gộp hai khối nhỏ | Đã hỗ trợ trong core/API và giao diện; thử `split_01` (Space hoặc nút Đổi khối) |
 
-> Có nút thuật toán trên giao diện chưa có nghĩa thuật toán đã được cài đặt. Solver còn thiếu trả `not_implemented`. Chức năng **MOCK** chỉ phát lời giải tham chiếu có sẵn trong map, không tạo số liệu thuật toán.
+> Bốn nút thuật toán gọi solver thật, đo hiệu năng và replay đường đi đã kiểm chứng. Chức năng **MOCK** chỉ phát lời giải tham chiếu có sẵn trong map, không tạo số liệu thuật toán.
 
 ## Cài đặt và chạy
 
@@ -143,7 +143,7 @@ $body = @{ map_id = "easy_01"; algorithm = "BFS"; cost_model = "uniform" } | Con
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/solve -ContentType "application/json" -Body $body
 ```
 
-Với checkout hiện tại, lời gọi này trả `status: not_implemented`. Sau khi solver được triển khai, API có thể trả `solved`, `unsolved` hoặc `invalid_path`.
+Lời gọi này trả `status: solved` cùng path và metric thật. Map vô nghiệm trả `unsolved`; wrapper trả `invalid_path` nếu solver đưa đường đi không hợp lệ.
 
 ## Kiểm tra
 
@@ -166,9 +166,12 @@ npm run build
 ```powershell
 npm run test:frontend
 npm run test:browser
+npm run test:solvers
 ```
 
 `test:frontend` kiểm tra DOM, API thật và geometry, với renderer WebGL được thay thế trong môi trường test. `test:browser` chạy trình duyệt Microsoft Edge qua Playwright và cần Edge được cài trên máy. Có thể đổi URL kiểm tra bằng biến môi trường `FRONTEND_TEST_URL`.
+
+`test:solvers` chạy 32 trường hợp trên Edge thật: bốn thuật toán, hai cost model, map cơ bản/advanced/split/vô nghiệm; kiểm tra metric, replay và tiến độ chơi tay không đổi.
 
 ## Phát triển tiếp
 
@@ -185,4 +188,4 @@ Split: đứng lên ô ( ), hai cube dịch chuyển tới vị trí trong JSON;
 
 `unsolvable_01` vẫn là ca kiểm thử cố ý vô nghiệm; `split_pending_01` là template cũ thiếu đích dịch chuyển, không phải map split mới.
 
-Kiểm chứng: `python scripts/validate_maps.py`; sinh lại riêng map Advanced: `python scripts/build_advanced_maps.py`. Hai lệnh cần Python trong venv backend. Bốn solver của nhóm vẫn là placeholder.
+Kiểm chứng: `python scripts/validate_maps.py`; sinh lại riêng map Advanced: `python scripts/build_advanced_maps.py`. Hai lệnh cần Python trong venv backend. Bốn solver đã tích hợp; `split_pending_01` vẫn chỉ là template không chơi được.

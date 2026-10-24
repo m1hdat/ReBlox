@@ -2,7 +2,7 @@
 
 Tài liệu triển khai **BFS, DFS, UCS và A\*** cho ReBlox, từ hợp đồng dữ liệu đến kiểm thử và tích hợp. Đọc [README](README.md) trước để thiết lập môi trường.
 
-> **Trạng thái hiện tại:** cả bốn hàm `solve()` vẫn raise `SolverNotImplemented`. Registry, API, bảng solver và benchmark wrapper đã có sẵn. Việc cần làm là thay placeholder bằng thuật toán thật và bổ sung test riêng.
+> **Trạng thái hiện tại:** đã merge BFS, DFS, UCS và A* từ bốn nhánh của nhóm. Có test riêng từng solver và kiểm tra API cả bốn thuật toán trên 11 map playable với hai cost model.
 
 ## Mục lục
 
@@ -172,11 +172,13 @@ Lưu `parent[next_state] = (state, action.value)` khi nhận node mới hoặc k
 | `uniform` | Luôn `1.0` |
 | `orientation_weighted` | `2.0` nếu khối nguyên đứng trước nước lăn; di chuyển cube/đổi cube và các nước còn lại `1.0` |
 
+Mô hình `orientation_weighted` là giả định thực nghiệm: lăn từ đứng sang nằm được gán chi phí gấp đôi các nước khác để phân biệt tối ưu số nước và tối ưu tổng cost; đây không phải mô phỏng năng lượng vật lý. Báo cáo cần công bố và giải thích giả định này.
+
 Luôn dùng `step_cost` từ `neighbors()`. BFS/DFS cũng phải báo đúng chi phí khi chạy với `orientation_weighted`; không gán `solution_cost = len(path)` trong mọi trường hợp.
 
 ## 5. Hướng triển khai từng thuật toán
 
-Các bước dưới đây là hướng dẫn triển khai, chưa phải thuật toán đã có trong repository.
+Các bước dưới đây mô tả nguyên tắc của bốn solver đã tích hợp trong repository.
 
 ### BFS — Breadth-First Search
 
@@ -225,6 +227,16 @@ Giữ cơ chế `g_score`, parent, counter, bỏ entry lỗi thời và relax gi
 | A\* | Heap theo `g+h` | Tối ưu với heuristic admissible và xử lý mở lại phù hợp; consistent cho phép đóng state |
 
 ## 6. Heuristic A* có chứng minh
+
+### Heuristic đang dùng trong astar.py
+
+Trên map không có splitter, `prepare_heuristic()` chạy Dijkstra ngược từ goal để tạo bảng khoảng cách cho bài toán nới lỏng: giữ tư thế và phép lăn, bỏ hạn chế fragile, coi mọi cầu đều mở, bỏ tác động công tắc. Bảng được tạo lại trong mỗi lần gọi solve; benchmark tính cả chi phí chuẩn bị bảng.
+
+Mỗi cạnh thật cũng có trong đồ thị nới lỏng, cùng chi phí, nên khoảng cách nới lỏng không vượt chi phí thật (admissible). Bất đẳng thức đường đi ngắn nhất cho `h(s) <= cost(s,s') + h(s')` chứng minh consistency. Dijkstra ngược tính chi phí cạnh từ trạng thái tiền nhiệm; hai chiều có thể khác cost với `orientation_weighted`. Block không tới được goal ngay cả trong đồ thị nới lỏng có h vô cực và có thể bỏ nhánh đó.
+
+Trên toàn bộ map có splitter, h bằng 0: A* tương đương UCS, vẫn tối ưu nhưng không có lợi thế định hướng. Cơ chế relax cho phép mở lại state khi g tốt hơn. Test kiểm tra admissibility/consistency trên toàn bộ state tới được của bộ map với hai cost model và đối chiếu nghiệm bằng Dijkstra độc lập.
+
+### Phương án Manhattan tham khảo
 
 Khởi đầu bằng `h=0` là hợp lệ. Khi cần heuristic có thông tin, dùng khoảng cách Manhattan từ **ô neo trên-trái** của khối đến ô đích, chia 2:
 
@@ -308,7 +320,7 @@ cd backend
 ./.venv/Scripts/python.exe -m pytest tests/test_solver_bfs.py -q
 ```
 
-Đổi tên file theo thuật toán. Bộ test hiện tại kiểm tra core, API, map và benchmark; **chưa đủ để nghiệm thu bốn solver mới**.
+Đổi tên file theo thuật toán. Bộ test gồm core, API, map, benchmark và test riêng của cả bốn solver; test API bắt buộc trả kết quả thật thay vì chấp nhận `not_implemented`.
 
 ### Ma trận kiểm thử cần bổ sung
 
@@ -333,7 +345,7 @@ Oracle và `reference_solution` chỉ dùng để kiểm thử; solver không đ
 
 ### Ví dụ test lời giải thật
 
-Thêm vào file test riêng; ví dụ dưới dùng BFS và sẽ thất bại ở checkout hiện tại cho đến khi BFS được cài:
+Ví dụ kiểm tra BFS đã tích hợp:
 
 ```python
 import pytest
